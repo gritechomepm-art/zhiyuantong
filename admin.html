@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>志愿通 · 管理后台</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500&display=swap');
+:root{--navy:#0d1b2a;--navy2:#132033;--gold:#c8a96e;--text:#e8e4dc;--text2:#9e9a93;--text3:#5e5c58;--border:rgba(200,169,110,.18);--card:rgba(19,32,51,.9)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--navy);color:var(--text);min-height:100vh}
+.hidden{display:none!important}
+#toast{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.ti{background:var(--navy2);border:1px solid var(--border);border-radius:8px;padding:12px 18px;font-size:13px;color:var(--text);min-width:220px;animation:si .3s ease}
+.ti.s{border-color:rgba(45,125,90,.5);color:#6ee7b7}
+.ti.e{border-color:rgba(217,79,61,.5);color:#f87171}
+@keyframes si{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+/* Sidebar */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:220px;flex-shrink:0;background:var(--navy2);border-right:1px solid var(--border);padding:1.5rem 0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto}
+.sb-logo{padding:0 1.5rem 1.5rem;border-bottom:1px solid var(--border);margin-bottom:1rem}
+.sb-logo-mark{width:32px;height:32px;border:1.5px solid var(--gold);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-family:'Noto Serif SC';font-size:14px;color:var(--gold);font-weight:700;margin-bottom:6px}
+.sb-logo-t{font-family:'Noto Serif SC';font-size:14px}
+.sb-logo-s{font-size:10px;color:var(--text3)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 1.5rem;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;border:none;background:none;font-family:'Noto Sans SC';width:100%}
+.nav-item:hover,.nav-item.active{background:rgba(200,169,110,.08);color:var(--text)}
+.nav-item.active{border-right:2px solid var(--gold)}
+.main{margin-left:220px;flex:1;padding:2rem}
+/* Cards */
+.page-title{font-family:'Noto Serif SC';font-size:22px;font-weight:600;margin-bottom:1.5rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+.card-title{font-size:14px;font-weight:500;color:var(--text2);margin-bottom:1rem;text-transform:uppercase;letter-spacing:.05em}
+.stat-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:1.5rem}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center}
+.scard .n{font-size:28px;font-weight:700;font-family:'Noto Serif SC';color:var(--gold)}
+.scard .l{font-size:11px;color:var(--text3);margin-top:4px}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem}
+.chart-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem}
+/* Table */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:1200px}
+th{padding:8px 10px;font-size:10px;font-weight:500;color:var(--text3);text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.05em;background:rgba(200,169,110,.03)}
+td{padding:8px 10px;border-bottom:1px solid rgba(200,169,110,.06);vertical-align:middle}
+tr:hover td{background:rgba(200,169,110,.03)}
+/* Forms / inline edit */
+.inline-input{background:transparent;border:none;color:var(--text);font-family:'Noto Sans SC';font-size:12px;width:100%;outline:none;padding:2px 4px;border-radius:3px}
+.inline-input:focus{background:rgba(255,255,255,.05)}
+.select-type{background:var(--navy);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:3px 6px;cursor:pointer}
+/* Badge */
+.badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:600}
+.bc{background:rgba(37,99,168,.22);color:#93c5fd} .bw{background:rgba(45,125,90,.22);color:#6ee7b7} .bb{background:rgba(196,122,30,.22);color:#fcd34d}
+/* Buttons */
+.btn{padding:7px 16px;border-radius:5px;font-size:12px;font-family:'Noto Sans SC';font-weight:500;cursor:pointer;transition:all .2s;border:none}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-gold:hover{background:#e8c98a}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-danger{background:rgba(217,79,61,.15);border:1px solid rgba(217,79,61,.3);color:#f87171}
+.btn-danger:hover{background:rgba(217,79,61,.25)}
+.btn-sm{padding:4px 10px;font-size:11px}
+/* Auth screen */
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2rem;width:340px;text-align:center}
+.auth-card h2{font-family:'Noto Serif SC';font-size:20px;margin-bottom:.5rem}
+.auth-card p{font-size:13px;color:var(--text2);margin-bottom:1.5rem}
+.field{margin-bottom:1rem;text-align:left}
+.field label{font-size:12px;color:var(--text2);display:block;margin-bottom:6px}
+.field input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:14px;color:var(--text);font-family:'Noto Sans SC';outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--gold)}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal{background:var(--navy2);border:1px solid var(--border);border-radius:12px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto}
+.modal-head{padding:1.25rem 1.5rem;border-bottom:1px solid rgba(200,169,110,.07);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--navy2);z-index:1}
+.modal-head h3{font-family:'Noto Serif SC';font-size:17px;font-weight:600}
+.modal-close{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer}
+.modal-body{padding:1.5rem}
+.modal-foot{padding:1rem 1.5rem;border-top:1px solid rgba(200,169,110,.07);display:flex;gap:10px;justify-content:flex-end}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-field{margin-bottom:1rem}
+.form-field label{font-size:12px;color:var(--text2);display:block;margin-bottom:6px}
+.form-field input,.form-field select,.form-field textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:9px 14px;font-size:13px;color:var(--text);font-family:'Noto Sans SC';outline:none}
+.form-field textarea{resize:vertical;min-height:80px}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--gold)}
+.form-field select option{background:var(--navy2)}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem}
+.search-input{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:5px;padding:7px 14px;font-size:12px;color:var(--text);font-family:'Noto Sans SC';outline:none;width:200px}
+.search-input:focus{border-color:var(--gold)}
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:4px 12px;border-radius:20px;border:1px solid var(--border);font-size:11px;color:var(--text2);cursor:pointer;background:transparent;font-family:'Noto Sans SC'}
+.chip.active{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:500}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- ── AUTH ── -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div style="font-family:'Noto Serif SC';font-size:36px;color:var(--gold);margin-bottom:.5rem">报</div>
+    <h2>管理后台</h2>
+    <p>需要管理员权限才能访问</p>
+    <div class="field"><label>邮箱</label><input type="email" id="a-email" placeholder="admin@example.com"></div>
+    <div class="field"><label>密码</label><input type="password" id="a-pwd" placeholder="密码"></div>
+    <button class="btn btn-gold" style="width:100%;margin-top:.5rem" onclick="adminLogin()">登录</button>
+  </div>
+</div>
+
+<!-- ── ADMIN LAYOUT ── -->
+<div id="admin-layout" class="layout hidden">
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-mark">报</div>
+      <div class="sb-logo-t">志愿通后台</div>
+      <div class="sb-logo-s" id="admin-email-lbl">管理员</div>
+    </div>
+    <button class="nav-item active" id="nav-analytics" onclick="showSection('analytics')">📊 数据分析</button>
+    <button class="nav-item" id="nav-volunteers" onclick="showSection('volunteers')">📋 志愿库管理</button>
+    <button class="nav-item" id="nav-plans" onclick="showSection('plans')">📁 用户方案</button>
+    <button class="nav-item" onclick="adminLogout()" style="margin-top:auto;color:#f87171">🚪 退出登录</button>
+  </div>
+
+  <div class="main">
+    <!-- Analytics -->
+    <div id="sec-analytics">
+      <div class="page-title">数据分析总览</div>
+      <div class="stat-row" id="stat-row">
+        <div class="scard"><div class="n" id="st-plans">—</div><div class="l">总方案数</div></div>
+        <div class="scard"><div class="n" id="st-today">—</div><div class="l">今日新增</div></div>
+        <div class="scard"><div class="n" id="st-users">—</div><div class="l">用户数</div></div>
+        <div class="scard"><div class="n" id="st-shares">—</div><div class="l">分享次数</div></div>
+      </div>
+      <div class="chart-row">
+        <div class="chart-box">
+          <div class="card-title">近30天方案创建趋势</div>
+          <canvas id="daily-chart" height="200"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="card-title">分数分布</div>
+          <canvas id="score-chart" height="200"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">最受关注的院校 Top 10</div>
+        <canvas id="school-chart" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- Volunteers -->
+    <div id="sec-volunteers" class="hidden">
+      <div class="page-title">志愿库管理</div>
+      <div class="top-bar">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input class="search-input" placeholder="搜索院校/专业..." id="v-search" oninput="filterVols()">
+          <div class="filter-chips">
+            <button class="chip active" data-t="all" onclick="setVT('all',this)">全部</button>
+            <button class="chip" data-t="c" onclick="setVT('c',this)">冲</button>
+            <button class="chip" data-t="w" onclick="setVT('w',this)">稳</button>
+            <button class="chip" data-t="b" onclick="setVT('b',this)">保</button>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="openVModal(null)">+ 新增志愿</button>
+      </div>
+      <div class="card" style="padding:.75rem">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th style="width:36px">#</th>
+              <th style="width:50px">类型</th>
+              <th style="width:120px">院校</th>
+              <th style="width:70px">城市</th>
+              <th>专业方向</th>
+              <th style="width:72px;text-align:right">2023位次</th>
+              <th style="width:72px;text-align:right">2024位次</th>
+              <th style="width:72px;text-align:right">2025位次</th>
+              <th style="width:66px;text-align:right">学费/年</th>
+              <th style="width:50px">就业</th>
+              <th style="width:50px">状态</th>
+              <th style="width:90px">操作</th>
+            </tr></thead>
+            <tbody id="vols-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plans -->
+    <div id="sec-plans" class="hidden">
+      <div class="page-title">用户方案列表</div>
+      <div class="card" style="padding:.75rem">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>方案标题</th>
+              <th>分数</th>
+              <th>排位</th>
+              <th>省份</th>
+              <th>创建时间</th>
+              <th>浏览数</th>
+              <th>操作</th>
+            </tr></thead>
+            <tbody id="plans-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Volunteer Edit Modal -->
+<div id="v-modal" class="modal-bg hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="v-modal-title">编辑志愿</h3>
+      <button class="modal-close" onclick="closeVModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field"><label>序号 *</label><input type="number" id="vf-no"></div>
+        <div class="form-field"><label>类型 *</label>
+          <select id="vf-type">
+            <option value="c">冲（c）</option>
+            <option value="w">稳（w）</option>
+            <option value="b">保（b）</option>
+          </select>
+        </div>
+        <div class="form-field"><label>院校名称 *</label><input id="vf-school"></div>
+        <div class="form-field"><label>城市 *</label><input id="vf-city"></div>
+        <div class="form-field"><label>省内/省外 *</label>
+          <select id="vf-prov">
+            <option value="in">省内（in）</option>
+            <option value="out">省外（out）</option>
+          </select>
+        </div>
+        <div class="form-field"><label>学费/年（元）*</label><input type="number" id="vf-fee"></div>
+        <div class="form-field"><label>就业评分（1-5）*</label>
+          <select id="vf-emp">
+            <option value="1">1 极差</option><option value="2">2 一般</option>
+            <option value="3">3 尚可</option><option value="4">4 较好</option><option value="5">5 优秀</option>
+          </select>
+        </div>
+        <div class="form-field"><label>2023位次</label><input type="number" id="vf-r23" placeholder="（可为空）"></div>
+        <div class="form-field"><label>2024位次</label><input type="number" id="vf-r24" placeholder="（可为空）"></div>
+        <div class="form-field"><label>2025位次</label><input type="number" id="vf-r25" placeholder="（可为空）"></div>
+        <div class="form-field" style="display:flex;gap:1rem;align-items:center;padding-top:1.5rem">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="vf-poor"> <span style="font-size:13px">就业受限</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="vf-warn"> <span style="font-size:13px">组内有坑</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="vf-active" checked> <span style="font-size:13px">启用</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-field"><label>建议专业方向 *</label><input id="vf-major"></div>
+      <div class="form-field"><label>专业组避坑说明</label><input id="vf-gw" placeholder="（可为空）"></div>
+      <div class="form-field"><label>备注/就业说明 *</label><textarea id="vf-note"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closeVModal()">取消</button>
+      <button class="btn btn-gold btn-sm" onclick="saveVol()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// ⚠️  CONFIG — 与 index.html 保持一致
+// ════════════════════════════════════════════
+const SUPABASE_URL = 'https://jpeswkqvuimfbsdcxpua.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_oufQDZINA2a_6U7fADUS6g_t4FmjG20';
+// ════════════════════════════════════════════
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let adminUser = null;
+let allVols = [], volFilter = { type: 'all', search: '' };
+let editingVolId = null;
+
+function toast(msg, type='') {
+  const d = document.createElement('div'); d.className='ti '+(type==='success'?'s':type==='error'?'e':'');
+  d.textContent=msg; document.getElementById('toast').appendChild(d);
+  setTimeout(()=>d.remove(), 3500);
+}
+
+// ─── Auth ─────────────────────────────────────
+async function adminLogin() {
+  const email = document.getElementById('a-email').value.trim();
+  const pwd   = document.getElementById('a-pwd').value;
+  if (!email||!pwd){toast('请填写邮箱和密码','error');return;}
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pwd });
+  if (error){toast('登录失败：'+error.message,'error');return;}
+  // Check admin role
+  const { data: adm } = await sb.from('admin_users').select('user_id').eq('user_id', data.user.id).single();
+  if (!adm){await sb.auth.signOut();toast('无管理员权限','error');return;}
+  adminUser = data.user;
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('admin-layout').classList.remove('hidden');
+  document.getElementById('admin-email-lbl').textContent = adminUser.email;
+  loadAnalytics();
+}
+async function adminLogout() { await sb.auth.signOut(); location.reload(); }
+
+// Init: check existing session
+(async ()=>{
+  const { data:{session} } = await sb.auth.getSession();
+  if (session?.user) {
+    const { data: adm } = await sb.from('admin_users').select('user_id').eq('user_id', session.user.id).single();
+    if (adm) {
+      adminUser = session.user;
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('admin-layout').classList.remove('hidden');
+      document.getElementById('admin-email-lbl').textContent = adminUser.email;
+      loadAnalytics();
+    }
+  }
+})();
+
+// ─── Nav ──────────────────────────────────────
+function showSection(sec) {
+  ['analytics','volunteers','plans'].forEach(s => {
+    document.getElementById('sec-'+s).classList.toggle('hidden', s !== sec);
+    document.getElementById('nav-'+s)?.classList.toggle('active', s === sec);
+  });
+  if (sec === 'volunteers' && !allVols.length) loadVols();
+  if (sec === 'plans') loadPlans();
+}
+
+// ─── Analytics ───────────────────────────────
+async function loadAnalytics() {
+  const { data, error } = await sb.rpc('get_analytics_summary');
+  if (error) { toast('加载分析数据失败：'+error.message,'error'); return; }
+  document.getElementById('st-plans').textContent  = data.total_plans ?? 0;
+  document.getElementById('st-today').textContent  = data.plans_today ?? 0;
+  document.getElementById('st-users').textContent  = data.total_users ?? 0;
+  document.getElementById('st-shares').textContent = data.total_shares ?? 0;
+  // Daily chart
+  const daily = data.daily_plans || [];
+  new Chart(document.getElementById('daily-chart'), {
+    type: 'line',
+    data: { labels: daily.map(d=>d.day.slice(5)), datasets:[{label:'方案数',data:daily.map(d=>d.cnt),borderColor:'#c8a96e',backgroundColor:'rgba(200,169,110,.1)',fill:true,tension:.4,pointRadius:3}]},
+    options: {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5e5c58',maxRotation:45}},y:{ticks:{color:'#5e5c58'},beginAtZero:true}}}
+  });
+  // Score distribution
+  const scores = data.score_dist || [];
+  new Chart(document.getElementById('score-chart'), {
+    type: 'bar',
+    data: { labels: scores.map(s=>s.range_start+'分'), datasets:[{label:'人数',data:scores.map(s=>s.cnt),backgroundColor:'rgba(200,169,110,.6)',borderColor:'#c8a96e',borderWidth:1}]},
+    options: {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5e5c58'}},y:{ticks:{color:'#5e5c58'},beginAtZero:true}}}
+  });
+  // Top schools
+  const schools = (data.top_schools || []).slice(0,10);
+  new Chart(document.getElementById('school-chart'), {
+    type: 'bar',
+    data: { labels: schools.map(s=>s.school), datasets:[{label:'被选次数',data:schools.map(s=>s.cnt),backgroundColor:'rgba(37,99,168,.6)',borderColor:'#93c5fd',borderWidth:1}]},
+    options: {responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5e5c58'},beginAtZero:true},y:{ticks:{color:'#9e9a93'}}}}
+  });
+}
+
+// ─── Volunteers ───────────────────────────────
+async function loadVols() {
+  const { data, error } = await sb.from('volunteers').select('*').order('no');
+  if (error){ toast('加载失败','error'); return; }
+  allVols = data;
+  renderVols();
+}
+function filterVols() {
+  volFilter.search = document.getElementById('v-search').value.toLowerCase();
+  renderVols();
+}
+function setVT(t, el) {
+  volFilter.type = t;
+  document.querySelectorAll('[data-t]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderVols();
+}
+function renderVols() {
+  const rows = allVols.filter(v => {
+    if (volFilter.type !== 'all' && v.type !== volFilter.type) return false;
+    if (volFilter.search && !`${v.school} ${v.city} ${v.major}`.toLowerCase().includes(volFilter.search)) return false;
+    return true;
+  });
+  const tl={c:'<span class="badge bc">冲</span>',w:'<span class="badge bw">稳</span>',b:'<span class="badge bb">保</span>'};
+  document.getElementById('vols-tbody').innerHTML = rows.map(v => `
+    <tr>
+      <td style="font-size:11px;color:var(--text3)">${v.no}</td>
+      <td>${tl[v.type]}</td>
+      <td style="font-weight:500;font-size:12px">${v.school}</td>
+      <td style="font-size:11px;color:var(--text2)">${v.city}</td>
+      <td style="font-size:11px;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.major}</td>
+      <td style="text-align:right;font-size:11px;font-family:monospace">${v.rank_2023?.toLocaleString()??'—'}</td>
+      <td style="text-align:right;font-size:11px;font-family:monospace">${v.rank_2024?.toLocaleString()??'—'}</td>
+      <td style="text-align:right;font-size:11px;font-family:monospace">${v.rank_2025?.toLocaleString()??'—'}</td>
+      <td style="text-align:right;font-size:11px">${v.fee>10000?(v.fee/10000).toFixed(1)+'万':v.fee.toLocaleString()}</td>
+      <td style="font-size:11px;color:${['','#f87171','#fb923c','#fbbf24','#6ee7b7','#4ade80'][v.emp_score]}">${['','★','★★','★★★','★★★★','★★★★★'][v.emp_score]}</td>
+      <td><span style="font-size:10px;color:${v.is_active?'#6ee7b7':'#f87171'}">${v.is_active?'启用':'停用'}</span></td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-sm" onclick="openVModal(${v.id})">编辑</button>
+          <button class="btn btn-danger btn-sm" onclick="toggleVol(${v.id},${v.is_active})">${v.is_active?'停用':'启用'}</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+function openVModal(id) {
+  editingVolId = id;
+  document.getElementById('v-modal-title').textContent = id ? '编辑志愿' : '新增志愿';
+  if (id) {
+    const v = allVols.find(x => x.id === id);
+    if (!v) return;
+    document.getElementById('vf-no').value    = v.no;
+    document.getElementById('vf-type').value  = v.type;
+    document.getElementById('vf-school').value= v.school;
+    document.getElementById('vf-city').value  = v.city;
+    document.getElementById('vf-prov').value  = v.province_type;
+    document.getElementById('vf-fee').value   = v.fee;
+    document.getElementById('vf-emp').value   = v.emp_score;
+    document.getElementById('vf-r23').value   = v.rank_2023||'';
+    document.getElementById('vf-r24').value   = v.rank_2024||'';
+    document.getElementById('vf-r25').value   = v.rank_2025||'';
+    document.getElementById('vf-major').value = v.major;
+    document.getElementById('vf-gw').value    = v.group_warn||'';
+    document.getElementById('vf-note').value  = v.note||'';
+    document.getElementById('vf-poor').checked  = v.is_poor_prospect;
+    document.getElementById('vf-warn').checked  = v.has_group_warn;
+    document.getElementById('vf-active').checked= v.is_active;
+  } else {
+    ['vf-no','vf-school','vf-city','vf-fee','vf-r23','vf-r24','vf-r25','vf-major','vf-gw','vf-note'].forEach(id => document.getElementById(id).value='');
+    document.getElementById('vf-type').value='c';
+    document.getElementById('vf-prov').value='in';
+    document.getElementById('vf-emp').value='3';
+    document.getElementById('vf-poor').checked=false;
+    document.getElementById('vf-warn').checked=false;
+    document.getElementById('vf-active').checked=true;
+  }
+  document.getElementById('v-modal').classList.remove('hidden');
+}
+function closeVModal() { document.getElementById('v-modal').classList.add('hidden'); }
+async function saveVol() {
+  const payload = {
+    no: parseInt(document.getElementById('vf-no').value),
+    type: document.getElementById('vf-type').value,
+    school: document.getElementById('vf-school').value.trim(),
+    city: document.getElementById('vf-city').value.trim(),
+    province_type: document.getElementById('vf-prov').value,
+    fee: parseInt(document.getElementById('vf-fee').value)||5500,
+    emp_score: parseInt(document.getElementById('vf-emp').value),
+    rank_2023: parseInt(document.getElementById('vf-r23').value)||null,
+    rank_2024: parseInt(document.getElementById('vf-r24').value)||null,
+    rank_2025: parseInt(document.getElementById('vf-r25').value)||null,
+    major: document.getElementById('vf-major').value.trim(),
+    group_warn: document.getElementById('vf-gw').value.trim()||null,
+    note: document.getElementById('vf-note').value.trim(),
+    is_poor_prospect: document.getElementById('vf-poor').checked,
+    has_group_warn: document.getElementById('vf-warn').checked,
+    is_active: document.getElementById('vf-active').checked
+  };
+  if (!payload.school||!payload.major){toast('院校和专业方向不能为空','error');return;}
+  let err;
+  if (editingVolId) {
+    ({error:err} = await sb.from('volunteers').update(payload).eq('id', editingVolId));
+  } else {
+    ({error:err} = await sb.from('volunteers').insert(payload));
+  }
+  if (err){toast('保存失败：'+err.message,'error');return;}
+  toast('已保存','success');
+  closeVModal();
+  await loadVols();
+}
+async function toggleVol(id, current) {
+  const { error } = await sb.from('volunteers').update({ is_active: !current }).eq('id', id);
+  if (error){toast('操作失败','error');return;}
+  toast(current?'已停用':'已启用','success');
+  await loadVols();
+}
+
+// ─── Plans ────────────────────────────────────
+async function loadPlans() {
+  const { data, error } = await sb.from('plans').select('id,title,score,rank,province,created_at,view_count,share_token').order('created_at', {ascending:false}).limit(100);
+  if (error){toast('加载失败','error');return;}
+  document.getElementById('plans-tbody').innerHTML = (data||[]).map(p => `
+    <tr>
+      <td style="font-weight:500">${p.title}</td>
+      <td>${p.score}分</td>
+      <td>${p.rank.toLocaleString()}</td>
+      <td>${p.province}</td>
+      <td style="font-size:11px;color:var(--text2)">${new Date(p.created_at).toLocaleString('zh-CN')}</td>
+      <td>${p.view_count}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="window.open('/#share/${p.share_token}')">查看</button>
+        <button class="btn btn-danger btn-sm" onclick="adminDelPlan('${p.id}')">删除</button>
+      </td>
+    </tr>`).join('');
+}
+async function adminDelPlan(id) {
+  if (!confirm('确定删除此方案吗？'))return;
+  const {error} = await sb.from('plans').delete().eq('id',id);
+  if(error){toast('删除失败','error');return;}
+  toast('已删除','success'); loadPlans();
+}
+</script>
+</body>
+</html>

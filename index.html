@@ -462,11 +462,32 @@ td{padding:9px 11px;vertical-align:top}
       <button class="chip" data-f="loc" data-v="out" onclick="setF('loc','out',this)">省外</button>
     </div>
     <div class="f-sep"></div>
+    <span class="f-lbl">城市</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="chip active" data-f="tier" data-v="all" onclick="setF('tier','all',this)">全部</button>
+      <button class="chip" data-f="tier" data-v="一线" onclick="setF('tier','一线',this)">一线</button>
+      <button class="chip" data-f="tier" data-v="新一线" onclick="setF('tier','新一线',this)">新一线</button>
+      <button class="chip" data-f="tier" data-v="二线" onclick="setF('tier','二线',this)">二线</button>
+    </div>
+    <div class="f-sep"></div>
     <span class="f-lbl">就业</span>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button class="chip active" data-f="emp" data-v="all" onclick="setF('emp','all',this)">全部</button>
       <button class="chip" data-f="emp" data-v="5" onclick="setF('emp','5',this)">⭐⭐⭐⭐⭐</button>
       <button class="chip" data-f="emp" data-v="4" onclick="setF('emp','4',this)">⭐⭐⭐⭐+</button>
+    </div>
+    <div class="f-sep"></div>
+    <span class="f-lbl">转专业</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="chip active" data-f="transfer" data-v="all" onclick="setF('transfer','all',this)">全部</button>
+      <button class="chip" data-f="transfer" data-v="自由" onclick="setF('transfer','自由',this)">🔓 自由</button>
+      <button class="chip" data-f="transfer" data-v="有条件" onclick="setF('transfer','有条件',this)">📋 有条件</button>
+    </div>
+    <div class="f-sep"></div>
+    <span class="f-lbl">双一流</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="chip active" data-f="yixiu" data-v="all" onclick="setF('yixiu','all',this)">全部</button>
+      <button class="chip" data-f="yixiu" data-v="yes" onclick="setF('yixiu','yes',this)">有双一流学科</button>
     </div>
     <div class="f-sep"></div>
     <span class="f-lbl">标记</span>
@@ -475,7 +496,7 @@ td{padding:9px 11px;vertical-align:top}
       <button class="chip" data-f="sp" data-v="poor" onclick="setF('sp','poor',this)">🔕 就业受限</button>
       <button class="chip" data-f="sp" data-v="none" onclick="setF('sp','none',this)" style="color:var(--text3)">清除</button>
     </div>
-    <input class="search-box" type="text" placeholder="搜索学校/专业/城市…" oninput="setSearch(this.value)">
+    <input class="search-box" type="text" placeholder="搜索学校/专业/城市/学科…" oninput="setSearch(this.value)">
     <span class="f-cnt" id="f-cnt">显示 80/80</span>
   </div>
 </div>
@@ -486,16 +507,21 @@ td{padding:9px 11px;vertical-align:top}
       <table>
         <thead>
           <tr>
-            <th style="width:38px" onclick="srt('no')"># ↕</th>
-            <th style="width:100px">类型</th>
-            <th style="width:140px" onclick="srt('school')">院校 ↕</th>
-            <th style="width:200px">建议专业方向 / 专业组说明</th>
-            <th style="width:80px;text-align:right" onclick="srt('r23')">2023位次 ↕</th>
-            <th style="width:80px;text-align:right" onclick="srt('r24')">2024位次 ↕</th>
-            <th style="width:80px;text-align:right" onclick="srt('r25')">2025位次 ↕</th>
-            <th style="width:76px" onclick="srt('fee')">学费/年 ↕</th>
-            <th style="width:66px" onclick="srt('emp')">就业 ↕</th>
-            <th>备注 / 专业组避坑</th>
+            <th style="width:36px" onclick="srt('no')"># ↕</th>
+            <th style="width:90px">类型</th>
+            <th style="width:130px" onclick="srt('school')">院校 ↕</th>
+            <th style="width:170px">建议专业方向</th>
+            <th style="width:74px;text-align:right" onclick="srt('r23')">2023位次 ↕</th>
+            <th style="width:74px;text-align:right" onclick="srt('r24')">2024位次 ↕</th>
+            <th style="width:74px;text-align:right" onclick="srt('r25')">2025位次 ↕</th>
+            <th style="width:68px" onclick="srt('ruanke')">软科排名 ↕</th>
+            <th style="width:70px" onclick="srt('fee')">学费/年 ↕</th>
+            <th style="width:62px" onclick="srt('emp')">就业 ↕</th>
+            <th style="width:62px" onclick="srt('postgrad')">保研率 ↕</th>
+            <th style="width:62px">城市</th>
+            <th style="width:62px">转专业</th>
+            <th style="width:130px">双一流学科</th>
+            <th>就业城市 / 备注避坑</th>
           </tr>
         </thead>
         <tbody id="tb"></tbody>
@@ -552,9 +578,9 @@ td{padding:9px 11px;vertical-align:top}
 // ════════════════════════════════════════════
 // ⚠️  CONFIG — 替换为你的 Supabase 项目信息
 // ════════════════════════════════════════════
-const SUPABASE_URL  = 'https://jpeswkqvuimfbsdcxpua.supabase.co';
-const SUPABASE_KEY  = 'sb_publishable_oufQDZINA2a_6U7fADUS6g_t4FmjG20';
-const SITE_URL      = 'https://zhiyuantong-fly.vercel.app';
+const SUPABASE_URL  = 'https://YOUR_PROJECT_ID.supabase.co';
+const SUPABASE_KEY  = 'YOUR_ANON_KEY';
+const SITE_URL      = 'https://YOUR_VERCEL_URL.vercel.app';
 // ════════════════════════════════════════════
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -564,7 +590,7 @@ let S = {
   user: null, volunteers: [], filtered: [],
   currentPlanId: null, currentShareToken: null,
   sortKey: 'no', sortAsc: true,
-  filters: { type:'all', loc:'all', emp:'all', sp:'none' },
+  filters: { type:'all', loc:'all', emp:'all', sp:'none', tier:'all', transfer:'all', yixiu:'all' },
   search: '', segVal: 1,
   wizard: { score:'', rank:'', prov:'广东', provPref:'all', priority:'emp', majorPrefs:['cs','ee'], empMin:3, chemAtt:1 }
 };
@@ -910,9 +936,12 @@ function applyFilters() {
     if (S.filters.emp  !== 'all' && v.emp_score < parseInt(S.filters.emp)) return false;
     if (S.filters.sp === 'warn' && !v.has_group_warn) return false;
     if (S.filters.sp === 'poor' && !v.is_poor_prospect) return false;
+    if (S.filters.tier !== 'all' && v.city_tier !== S.filters.tier) return false;
+    if (S.filters.transfer !== 'all' && v.transfer_policy !== S.filters.transfer) return false;
+    if (S.filters.yixiu === 'yes' && (!v.yixiu_subject || v.yixiu_subject.includes('无双一流'))) return false;
     if (S.search) {
       const q = S.search.toLowerCase();
-      if (!`${v.school} ${v.city} ${v.major} ${v.note}`.toLowerCase().includes(q)) return false;
+      if (!`${v.school} ${v.city} ${v.major} ${v.note} ${v.yixiu_subject||''} ${v.main_employ_city||''}`.toLowerCase().includes(q)) return false;
     }
     return true;
   });
@@ -921,7 +950,7 @@ function applyFilters() {
   document.getElementById('s-total').textContent = S.filtered.length;
 }
 function doSort() {
-  const ki = { no:0, school:'school', r23:'rank_2023', r24:'rank_2024', r25:'rank_2025', fee:'fee', emp:'emp_score' };
+  const ki = { no:0, school:'school', r23:'rank_2023', r24:'rank_2024', r25:'rank_2025', fee:'fee', emp:'emp_score', ruanke:'ruanke_rank', postgrad:'postgrad_rate' };
   const k = ki[S.sortKey];
   if (!k) return;
   S.filtered.sort((a, b) => {
@@ -955,6 +984,34 @@ function render() {
     function fR(n) { return n==null ? '<span class="rna">首年</span>' : `<span class="rv">${parseInt(n).toLocaleString()}</span>`; }
     let trd=''; if(v.rank_2024&&v.rank_2025){const d=v.rank_2025-v.rank_2024;if(Math.abs(d)>=1000) trd=`<div class="rtrd ${d>0?'rup':'rdn'}">${d>0?'▲竞争↑':'▼竞争↓'} ${Math.round(Math.abs(d)/1000)}k</div>`;}
     const feeH = v.fee>10000 ? `<div class="fee-v fee-high">${(v.fee/10000).toFixed(1)}万</div><div class="fee-s">中外合作</div>` : `<div class="fee-v">${v.fee.toLocaleString()}</div><div class="fee-s">元/年</div>`;
+    // 软科排名
+    const catLabel={'medical':'医药类','finance':'财经类','lang':'语言类','normal':'师范类','agri':'农业类','law':'政法类','tcm':'中医药类'};
+    let rkH = '<span class="rna">—</span>';
+    if (v.ruanke_rank) {
+      rkH = `<div style="font-size:12px;font-weight:500;color:var(--gold2)">第${v.ruanke_rank}名</div>`;
+    } else if (v.ruanke_cat && v.ruanke_cat_rank) {
+      rkH = `<div style="font-size:11px;font-weight:500;color:#c4b5fd">${catLabel[v.ruanke_cat]||v.ruanke_cat}</div><div style="font-size:11px;color:#c4b5fd">第${v.ruanke_cat_rank}名</div>`;
+    } else if (v.ruanke_cat) {
+      rkH = `<div style="font-size:11px;color:#c4b5fd">${catLabel[v.ruanke_cat]||v.ruanke_cat}</div><div style="font-size:10px;color:var(--text3)">上榜</div>`;
+    }
+    // 城市等级
+    const tierColor={'一线':'#fbbf24','新一线':'#93c5fd','二线':'#c4b5fd'};
+    const tc = tierColor[v.city_tier]||'var(--text3)';
+    const tierH = v.city_tier ? `<div style="font-size:11px;font-weight:500;color:${tc}">${v.city_tier}</div><div style="font-size:10px;color:var(--text3)">${v.city_name||v.city}</div>` : '<span class="rna">—</span>';
+    // 转专业
+    const tpIcon={'自由':'🔓','有条件':'📋','受限':'🔒'};
+    const tpC={'自由':'#6ee7b7','有条件':'#fbbf24','受限':'#f87171'};
+    const tpH = v.transfer_policy ? `<div style="font-size:11px;color:${tpC[v.transfer_policy]||'var(--text2)'}">${tpIcon[v.transfer_policy]||''} ${v.transfer_policy}</div>` : '<span class="rna">—</span>';
+    // 保研率
+    const pgH = v.postgrad_rate!=null ? `<div style="font-size:13px;font-weight:500;color:${v.postgrad_rate>=12?'#6ee7b7':v.postgrad_rate>=8?'#fbbf24':v.postgrad_rate>=5?'var(--text2)':'var(--text3)'}">${v.postgrad_rate}%</div>` : '<span class="rna">—</span>';
+    // 双一流学科
+    let yxH = '<span class="rna" style="font-size:10px">无</span>';
+    if (v.yixiu_subject && !v.yixiu_subject.includes('无双一流')) {
+      const subs = v.yixiu_subject.split('/');
+      yxH = subs.slice(0,2).map(s=>`<div style="font-size:10px;color:#d2a8ff;line-height:1.5">${s.trim()}</div>`).join('') + (subs.length>2?`<div style="font-size:9px;color:var(--text3)">+${subs.length-2}个</div>`:'');
+    }
+    // 就业城市 + 备注
+    const ecityH = v.main_employ_city ? `<div style="font-size:11px;color:#6ee7b7;margin-bottom:3px">📍 ${v.main_employ_city}</div>` : '';
     html += `<tr>
       <td style="text-align:center;font-size:11px;color:var(--text3);font-weight:600">${v.no}</td>
       <td><div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:3px">${tb[v.type]}${outB}</div><div style="display:flex;flex-wrap:wrap;gap:3px">${poorB}${warnB}</div></td>
@@ -963,21 +1020,34 @@ function render() {
       <td class="rank-cell">${fR(v.rank_2023)}</td>
       <td class="rank-cell">${fR(v.rank_2024)}</td>
       <td class="rank-cell">${fR(v.rank_2025)}${trd}</td>
+      <td style="text-align:center">${rkH}</td>
       <td>${feeH}</td>
       <td><div class="stars" style="color:${ec[v.emp_score]}">${'★'.repeat(v.emp_score)+'☆'.repeat(5-v.emp_score)}</div><div class="elbl" style="color:${ec[v.emp_score]}">${el[v.emp_score]}</div></td>
-      <td><div class="${v.is_poor_prospect?'note-t note-poor':'note-t'}" style="max-width:220px">${v.note||''}</div></td>
+      <td style="text-align:center">${pgH}</td>
+      <td>${tierH}</td>
+      <td>${tpH}</td>
+      <td>${yxH}</td>
+      <td>${ecityH}<div class="${v.is_poor_prospect?'note-t note-poor':'note-t'}" style="max-width:180px">${v.note||''}</div></td>
     </tr>`;
   });
   tbody.innerHTML = html;
 }
 
 // ─── Download ─────────────────────────────────
-const HDR = ['序号','类型','院校','城市','省份','建议专业方向','2023位次','2024位次','2025位次','学费/年(元)','就业评级','备注','专业组避坑说明','就业受限','组内有坑'];
+const HDR = ['序号','类型','院校','城市','省份','建议专业方向','2023位次','2024位次','2025位次','软科综合排名','软科分类','学费/年(元)','就业评级','保研率%','城市等级','转专业政策','双一流学科','主要就业城市','备注','专业组避坑说明','就业受限','组内有坑'];
 function getRows() {
   const tl={c:'冲',w:'稳',b:'保'}, el=['','极差','一般','尚可','较好','优秀'];
-  return S.filtered.map(v => [v.no, tl[v.type], v.school, v.city, v.province_type==='in'?'省内':'省外',
-    v.major, v.rank_2023??'首年', v.rank_2024??'首年', v.rank_2025??'首年',
-    v.fee, el[v.emp_score], v.note||'', v.group_warn||'', v.is_poor_prospect?'是':'否', v.has_group_warn?'是':'否']);
+  const catLabel={'medical':'医药类','finance':'财经类','lang':'语言类','normal':'师范类','agri':'农业类','law':'政法类','tcm':'中医药类'};
+  return S.filtered.map(v => {
+    const catStr = v.ruanke_cat ? (catLabel[v.ruanke_cat]||v.ruanke_cat) + (v.ruanke_cat_rank?` 第${v.ruanke_cat_rank}名`:'上榜') : '';
+    return [v.no, tl[v.type], v.school, v.city, v.province_type==='in'?'省内':'省外',
+      v.major, v.rank_2023??'首年', v.rank_2024??'首年', v.rank_2025??'首年',
+      v.ruanke_rank??'', catStr,
+      v.fee, el[v.emp_score], v.postgrad_rate!=null?v.postgrad_rate+'%':'',
+      v.city_tier||'', v.transfer_policy||'', v.yixiu_subject||'',
+      v.main_employ_city||'', v.note||'', v.group_warn||'',
+      v.is_poor_prospect?'是':'否', v.has_group_warn?'是':'否'];
+  });
 }
 function dlCSV() {
   const rows = [HDR, ...getRows()].map(r => r.map(c => `"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');

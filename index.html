@@ -857,8 +857,9 @@ function toast(msg, type='') {
   const d = document.createElement('div');
   d.className = 'toast-item ' + type;
   d.textContent = msg;
+  d.style.maxWidth = type === 'error' ? '480px' : '';
   document.getElementById('toast').appendChild(d);
-  setTimeout(() => d.remove(), 3500);
+  setTimeout(() => d.remove(), type === 'error' ? 9000 : 3500);
 }
 
 // ─── Views ────────────────────────────────────
@@ -1041,7 +1042,8 @@ async function generateResults() {
     showView('results');
     updateAuthUI();
   } catch(e) {
-    toast('加载数据失败：' + e.message, 'error');
+    console.error('generateResults error:', e);
+    toast('加载失败：' + (e?.message || JSON.stringify(e)), 'error');
   }
   setLoading(false);
   // 埋点：单独 try，不影响主流程

@@ -1328,6 +1328,7 @@ function render() {
   if (!S.filtered.length) { tbody.innerHTML=''; noRes.classList.remove('hidden'); return; }
   noRes.classList.add('hidden');
   const ec={1:'#f87171',2:'#fb923c',3:'#fbbf24',4:'#6ee7b7',5:'#4ade80'};
+  const el=['','极差','一般','尚可','较好','优秀'];
   const tb={
     c:'<span class="badge bc">冲</span>',w:'<span class="badge bw">稳</span>',b:'<span class="badge bb">保</span>',
     cx_type:'<span class="badge" style="background:rgba(239,68,68,.22);color:#fca5a5;border:1px solid rgba(239,68,68,.35)">超难</span>',

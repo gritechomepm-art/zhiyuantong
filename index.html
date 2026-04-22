@@ -1040,12 +1040,12 @@ async function generateResults() {
     applyFilters();
     showView('results');
     updateAuthUI();
-    // Track event
-    await sb.from('analytics_events').insert({ event_type: 'plan_generated', meta: { score: S.wizard.score, rank: S.wizard.rank } });
   } catch(e) {
     toast('加载数据失败：' + e.message, 'error');
   }
   setLoading(false);
+  // 埋点：单独 try，不影响主流程
+  try { await sb.from('analytics_events').insert({ event_type: 'plan_generated', meta: { score: S.wizard.score, rank: S.wizard.rank } }); } catch(_) {}
 }
 
 // ─── Save Plan ────────────────────────────────
@@ -1069,10 +1069,10 @@ async function savePlan() {
     S.currentShareToken = plan.share_token;
     document.getElementById('share-btn').style.display = '';
     document.getElementById('save-btn').textContent = '✅ 已保存';
-    await sb.from('analytics_events').insert({ event_type: 'plan_saved', plan_id: plan.id, user_id: S.user.id });
     toast('方案已保存！', 'success');
   } catch(e) { toast('保存失败：' + e.message, 'error'); }
   setLoading(false);
+  try { await sb.from('analytics_events').insert({ event_type: 'plan_saved', plan_id: S.currentPlanId, user_id: S.user?.id }); } catch(_) {}
 }
 
 // ─── Share ────────────────────────────────────
@@ -1265,9 +1265,9 @@ async function loadShared(token) {
                      document.querySelector('#results .table-wrap').outerHTML;
     applyFilters();
     showView('shared-view');
-    await sb.from('analytics_events').insert({ event_type: 'shared_plan_viewed', meta: { share_token: token } });
   } catch(e) { toast('加载分享方案失败', 'error'); showView('landing'); }
   setLoading(false);
+  try { await sb.from('analytics_events').insert({ event_type: 'shared_plan_viewed', meta: { share_token: token } }); } catch(_) {}
 }
 
 // ─── Table: filter + sort + render ───────────

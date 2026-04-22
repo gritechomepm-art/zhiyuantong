@@ -223,6 +223,26 @@ td{padding:9px 11px;vertical-align:top}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-txt{font-size:13px;color:var(--text2)}
 
+/* ── Membership Modal ── */
+.plan-tier{border:1px solid var(--border);border-radius:10px;padding:1.25rem;flex:1;cursor:pointer;transition:all .2s;position:relative}
+.plan-tier:hover{border-color:var(--gold)}
+.plan-tier.selected{border-color:var(--gold);background:var(--gold3)}
+.plan-tier.recommended::before{content:'推荐';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--navy);font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px;white-space:nowrap}
+.tier-name{font-family:'Noto Serif SC';font-size:16px;font-weight:600;margin-bottom:4px}
+.tier-price{font-size:24px;font-weight:700;color:var(--gold);margin-bottom:2px}
+.tier-price span{font-size:12px;font-weight:400;color:var(--text3)}
+.tier-features{margin-top:10px;font-size:12px;color:var(--text2);line-height:2}
+.tier-features li{list-style:none;display:flex;align-items:center;gap:6px}
+.tier-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+.tier-features li.no::before{content:'✗';color:var(--text3)}
+.tier-features li.no{color:var(--text3)}
+.pay-method{display:flex;gap:10px;margin-top:1rem}
+.pay-btn{flex:1;border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:all .15s;font-size:13px;color:var(--text2);background:transparent}
+.pay-btn:hover,.pay-btn.active{border-color:var(--gold);background:var(--gold3);color:var(--text)}
+.pay-btn .pay-icon{font-size:20px;display:block;margin-bottom:4px}
+.member-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(90deg,rgba(200,169,110,.2),rgba(200,169,110,.08));border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--gold);font-weight:500}
+.member-badge.free{background:rgba(255,255,255,.04);color:var(--text3);border-color:var(--border2)}
+
 @media(max-width:900px){.stat-grid{grid-template-columns:repeat(3,1fr)}.res-stu{display:none}.form-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.res-hinner{padding:0 1rem}.res-hero,.filter-wrap,.table-wrap{padding-left:1rem;padding-right:1rem}.stat-grid{grid-template-columns:1fr 1fr}}
 </style>
@@ -282,9 +302,108 @@ td{padding:9px 11px;vertical-align:top}
   </div>
 </div>
 
-<!-- ════════════════════
-     LANDING
-════════════════════ -->
+<!-- ── MEMBER MODAL ── -->
+<div id="member-modal" class="modal-bg hidden">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head">
+      <h3 id="member-modal-title">账号与会员</h3>
+      <button class="modal-close" onclick="closeMember()">×</button>
+    </div>
+    <div class="modal-body" style="padding:1.25rem 1.5rem">
+
+      <!-- 账号信息 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.03);border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:1.25rem">
+        <div>
+          <div style="font-size:13px;font-weight:500" id="member-email">—</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px" id="member-since">注册时间：—</div>
+        </div>
+        <div id="member-status-badge" class="member-badge free">免费版</div>
+      </div>
+
+      <!-- 套餐对比 -->
+      <div style="font-size:11px;color:var(--text3);letter-spacing:.04em;font-weight:500;margin-bottom:10px">选择套餐</div>
+      <div style="display:flex;gap:10px;margin-bottom:1.25rem" id="tier-cards">
+
+        <div class="plan-tier" id="tier-free" onclick="selectTier('free')">
+          <div class="tier-name">免费版</div>
+          <div class="tier-price">¥0<span> 永久</span></div>
+          <ul class="tier-features">
+            <li>生成一份志愿方案</li>
+            <li>基础筛选与排序</li>
+            <li>CSV / Excel 下载</li>
+            <li class="no">保存多份方案</li>
+            <li class="no">分享链接</li>
+            <li class="no">历史数据对比（2023–2025）</li>
+            <li class="no">就业深度报告</li>
+          </ul>
+        </div>
+
+        <div class="plan-tier recommended" id="tier-premium" onclick="selectTier('premium')">
+          <div class="tier-name" style="color:var(--gold)">会员版 ✦</div>
+          <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap">
+            <div class="tier-price" id="tier-price-display">¥99<span> /年</span></div>
+            <div style="font-size:11px;color:var(--text3);text-decoration:line-through" id="tier-price-orig">原价 ¥198</div>
+          </div>
+          <ul class="tier-features">
+            <li>无限保存志愿方案</li>
+            <li>全部筛选维度解锁</li>
+            <li>CSV / Excel 下载</li>
+            <li>最多 10 份方案同时保存</li>
+            <li>生成专属分享链接</li>
+            <li>三年位次趋势对比</li>
+            <li>就业深度报告解锁</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- 时长选择（仅 premium 显示） -->
+      <div id="duration-row" style="display:none;margin-bottom:1rem">
+        <div style="font-size:11px;color:var(--text3);letter-spacing:.04em;font-weight:500;margin-bottom:8px">会员时长</div>
+        <div style="display:flex;gap:8px">
+          <div class="pay-btn" id="dur-month" onclick="selectDuration('month')" style="flex:none;padding:8px 16px">
+            <div style="font-weight:600">¥29</div><div style="font-size:10px;color:var(--text3)">按月</div>
+          </div>
+          <div class="pay-btn active" id="dur-year" onclick="selectDuration('year')" style="flex:none;padding:8px 16px">
+            <div style="font-weight:600;color:var(--gold)">¥99</div><div style="font-size:10px;color:var(--text3)">按年（省 ¥249）</div>
+          </div>
+          <div class="pay-btn" id="dur-life" onclick="selectDuration('life')" style="flex:none;padding:8px 16px">
+            <div style="font-weight:600">¥199</div><div style="font-size:10px;color:var(--text3)">永久买断</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 支付方式（仅 premium 显示） -->
+      <div id="pay-row" style="display:none">
+        <div style="font-size:11px;color:var(--text3);letter-spacing:.04em;font-weight:500;margin-bottom:8px">支付方式</div>
+        <div class="pay-method">
+          <div class="pay-btn active" id="pay-wechat" onclick="selectPay('wechat')">
+            <span class="pay-icon">💚</span>微信支付
+          </div>
+          <div class="pay-btn" id="pay-alipay" onclick="selectPay('alipay')">
+            <span class="pay-icon">💙</span>支付宝
+          </div>
+        </div>
+        <!-- 二维码占位 -->
+        <div id="pay-qr-area" style="margin-top:1rem;text-align:center;padding:20px;background:rgba(255,255,255,.03);border:1px dashed var(--border);border-radius:8px">
+          <div style="font-size:28px;margin-bottom:8px">📲</div>
+          <div style="font-size:12px;color:var(--text2)" id="pay-qr-hint">点击下方按钮生成支付二维码</div>
+          <div id="pay-qr-img" style="display:none;margin:10px auto;width:140px;height:140px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#333;font-size:11px">二维码将在此显示</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-foot" style="justify-content:space-between">
+      <button class="btn btn-ghost btn-sm" onclick="doSignOut();closeMember()">退出登录</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="closeMember()">关闭</button>
+        <button class="btn btn-gold btn-sm" id="member-action-btn" onclick="handleMemberAction()" style="min-width:100px">升级会员</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <section id="landing" class="page">
   <div class="land-badge"><span class="badge-dot"></span>2026届高考志愿填报辅助</div>
   <h1 class="land-title">填对志愿，<em>改变四年</em></h1>
@@ -297,7 +416,15 @@ td{padding:9px 11px;vertical-align:top}
     <div class="land-feat"><div class="feat-icon">⬇️</div>一键下载 Excel</div>
   </div>
   <button class="btn-cta" onclick="startWizard()">开始填报 →</button>
-  <p class="land-note">适用广东新高考 3+1+2 · 物理类考生 · 数据来源：广东省教育考试院</p>
+  <p class="land-note">适用广东新高考 3+1+2 · 物理类 &amp; 历史类考生 · 数据来源：广东省教育考试院</p>
+  <div style="margin-top:1.25rem;max-width:600px;text-align:left;background:rgba(200,169,110,.06);border:1px solid var(--border);border-radius:8px;padding:14px 18px;animation:fd .6s .5s ease both;opacity:0;animation-fill-mode:forwards">
+    <div style="font-size:11px;color:var(--text3);font-weight:500;letter-spacing:.04em;margin-bottom:8px">📋 使用说明</div>
+    <ol style="font-size:11px;color:var(--text3);line-height:1.9;padding-left:1.2em;margin:0">
+      <li>本功能供参加 <strong style="color:var(--text2)">2026 年全国统一高考的广东考生</strong>使用。</li>
+      <li>适用于报考<strong style="color:var(--text2)">本科层次及高职（专科）普通类常规批次</strong>的考生。</li>
+      <li>提前批、艺术类、体育类专业等其他特殊类型招生的数据信息，因各省（区、市）计分办法、录取模式存在差异，请考生参考所在地省级招生考试机构提供的信息服务或向有关高校咨询。</li>
+    </ol>
+  </div>
   <p class="land-auth">
     已有方案？<a onclick="openAuth('login')">登录查看</a>
     &nbsp;·&nbsp;
@@ -326,11 +453,11 @@ td{padding:9px 11px;vertical-align:top}
   <div class="wiz-body">
     <div class="form-grid">
       <div class="field"><label>高考总分 *</label><input type="number" id="w-score" placeholder="如 600" min="400" max="750"><div class="hint">满分 750（不含加分）</div></div>
-      <div class="field"><label>物理类省内排位 *</label><input type="number" id="w-rank" placeholder="如 20000" min="1"><div class="hint">成绩公布后以官方位次为准</div></div>
+      <div class="field"><label>省内排位 *</label><input type="number" id="w-rank" placeholder="如 20000" min="1"><div class="hint">物理类或历史类均适用，以成绩公布后官方位次为准</div></div>
     </div>
     <div class="form-grid">
       <div class="field"><label>所在省份</label><select id="w-prov"><option value="广东" selected>广东省</option><option value="其他">其他省份（仅供参考）</option></select></div>
-      <div class="field"><label>高考模式</label><select><option selected>3+1+2 新高考（广东）</option></select></div>
+      <div class="field"><label>选考科目类别</label><select id="w-track"><option value="phy" selected>物理类（首选物理）</option><option value="his">历史类（首选历史）</option></select></div>
     </div>
     <div class="field"><label>选科组合</label>
       <div class="check-grid" style="grid-template-columns:repeat(3,1fr)">
@@ -398,8 +525,35 @@ td{padding:9px 11px;vertical-align:top}
   <div class="wiz-head"><h2>确认信息并生成方案</h2><p>请核对以下信息，确认无误后生成 80 个志愿方案</p></div>
   <div class="wiz-body">
     <div class="review-grid" id="review-grid"></div>
+    <!-- 策略选择器 -->
+    <div style="margin-bottom:1rem">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:500;letter-spacing:.03em">填报策略（共80个志愿，稳始终占40%）</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="strat-grid">
+        <label class="radio-item" onclick="selectStrategy('aggressive',this)">
+          <div class="radio-box strat-box" id="sb-aggressive" style="flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px">
+            <div style="font-weight:600;font-size:13px">🔥 激进型</div>
+            <div style="font-size:11px;color:var(--text3)">冲32 · 稳32 · 保16</div>
+            <div style="font-size:10px;color:var(--text3)">愿意搏一把</div>
+          </div>
+        </label>
+        <label class="radio-item" onclick="selectStrategy('balanced',this)">
+          <div class="radio-box strat-box" id="sb-balanced" style="flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-color:var(--gold);background:var(--gold3)">
+            <div style="font-weight:600;font-size:13px">⚖️ 稳妥型 <span style="font-size:9px;background:var(--gold);color:var(--navy);padding:1px 4px;border-radius:2px">推荐</span></div>
+            <div style="font-size:11px;color:var(--text3)">冲24 · 稳32 · 保24</div>
+            <div style="font-size:10px;color:var(--text3)">均衡配置</div>
+          </div>
+        </label>
+        <label class="radio-item" onclick="selectStrategy('conservative',this)">
+          <div class="radio-box strat-box" id="sb-conservative" style="flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px">
+            <div style="font-weight:600;font-size:13px">🛡️ 保守型</div>
+            <div style="font-size:11px;color:var(--text3)">冲16 · 稳32 · 保32</div>
+            <div style="font-size:10px;color:var(--text3)">优先托底</div>
+          </div>
+        </label>
+      </div>
+    </div>
     <div style="background:var(--gold3);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:1rem;font-size:12px;color:var(--text2);line-height:1.8">
-      📋 将按 <strong style="color:var(--text)">冲24 / 稳32 / 保24</strong> 比例生成方案，位次梯度参考近三年（2023–2025）真实投档数据，附专业组避坑提醒。<br>
+      📋 将按 <strong style="color:var(--text)" id="strat-label">冲24 / 稳32 / 保24</strong> 比例生成方案，位次梯度基于 <strong style="color:var(--text)" id="strat-range-label">动态排位区间</strong>，附专业组避坑提醒。<br>
       生成后可在结果页筛选、排序，登录后可保存并获取分享链接。
     </div>
     <div style="background:rgba(217,79,61,.07);border:1px solid rgba(217,79,61,.2);border-radius:6px;padding:12px 14px;font-size:12px;color:#fca5a5;line-height:1.7">
@@ -428,6 +582,7 @@ td{padding:9px 11px;vertical-align:top}
       <button class="btn btn-ghost btn-sm" onclick="dlCSV()">⬇ CSV</button>
       <button class="btn btn-ghost btn-sm" onclick="dlExcel()">⬇ Excel</button>
       <div class="user-btn" id="res-user-btn" onclick="openAuth('login')">登录保存</div>
+      <div class="user-btn hidden" id="res-member-btn" onclick="openMember()" style="color:var(--gold)">✦ 会员</div>
     </div>
   </div>
 </header>
@@ -435,9 +590,9 @@ td{padding:9px 11px;vertical-align:top}
 <div class="res-hero">
   <div class="stat-grid">
     <div class="stat-card"><div class="s-lbl">总志愿数</div><div class="s-num" id="s-total">80</div><div class="s-sub">院校专业组</div></div>
-    <div class="stat-card cc"><div class="s-lbl">🔵 冲</div><div class="s-num">24</div><div class="s-sub">13k–19k 位次</div></div>
-    <div class="stat-card cw"><div class="s-lbl">🟢 稳</div><div class="s-num">32</div><div class="s-sub">19k–23k 位次</div></div>
-    <div class="stat-card cb"><div class="s-lbl">🟡 保</div><div class="s-num">24</div><div class="s-sub">23k–50k 位次</div></div>
+    <div class="stat-card cc"><div class="s-lbl">🔵 冲</div><div class="s-num" id="s-c">24</div><div class="s-sub" id="s-c-sub">动态计算</div></div>
+    <div class="stat-card cw"><div class="s-lbl">🟢 稳</div><div class="s-num" id="s-w">32</div><div class="s-sub" id="s-w-sub">动态计算</div></div>
+    <div class="stat-card cb"><div class="s-lbl">🟡 保</div><div class="s-num" id="s-b">24</div><div class="s-sub" id="s-b-sub">动态计算</div></div>
     <div class="stat-card cx"><div class="s-lbl">⚠ 专业组有坑</div><div class="s-num" id="s-warn" style="color:#f87171">—</div><div class="s-sub">需仔细核对</div></div>
   </div>
   <div class="alert-bar">
@@ -453,6 +608,8 @@ td{padding:9px 11px;vertical-align:top}
       <button class="chip" data-f="type" data-v="c" onclick="setF('type','c',this)">🔵 冲</button>
       <button class="chip" data-f="type" data-v="w" onclick="setF('type','w',this)">🟢 稳</button>
       <button class="chip" data-f="type" data-v="b" onclick="setF('type','b',this)">🟡 保</button>
+      <button class="chip" data-f="type" data-v="cx_type" onclick="setF('type','cx_type',this)">🔴 超难</button>
+      <button class="chip" data-f="type" data-v="ce_type" onclick="setF('type','ce_type',this)">🟣 超易</button>
     </div>
     <div class="f-sep"></div>
     <span class="f-lbl">地区</span>
@@ -537,7 +694,25 @@ td{padding:9px 11px;vertical-align:top}
 ════════════════════ -->
 <section id="my-plans" class="page hidden">
 <div style="max-width:900px;margin:0 auto;padding:2rem">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+  <!-- 账号 & 会员状态卡 -->
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--gold3);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>
+      <div>
+        <div style="font-size:14px;font-weight:500" id="plans-email">—</div>
+        <div style="margin-top:4px;display:flex;align-items:center;gap:8px">
+          <span id="plans-member-badge" class="member-badge free">免费版</span>
+          <span style="font-size:11px;color:var(--text3)" id="plans-expire"></span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="openMember()">⚙ 账号设置</button>
+      <button class="btn btn-gold btn-sm" id="plans-upgrade-btn" onclick="openMember();selectTier('premium')">✦ 升级会员</button>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
     <div>
       <button class="btn btn-ghost btn-sm" onclick="showView('landing')" style="margin-bottom:.75rem">← 返回首页</button>
       <h2 style="font-family:'Noto Serif SC';font-size:22px;font-weight:600">我的方案</h2>
@@ -592,8 +767,65 @@ let S = {
   sortKey: 'no', sortAsc: true,
   filters: { type:'all', loc:'all', emp:'all', sp:'none', tier:'all', transfer:'all', yixiu:'all' },
   search: '', segVal: 1,
-  wizard: { score:'', rank:'', prov:'广东', provPref:'all', priority:'emp', majorPrefs:['cs','ee'], empMin:3, chemAtt:1 }
+  wizard: { score:'', rank:'', prov:'广东', provPref:'all', priority:'emp', majorPrefs:['cs','ee'], empMin:3, chemAtt:1, strategy:'balanced' }
 };
+
+// 动态分类区间系数（基于行业通行经验值）
+const RANK_COEFF = {
+  chong: { lo: 0.80, hi: 0.95 },  // 好5%–20%
+  wen:   { lo: 0.95, hi: 1.10 },  // ±5–10%
+  bao:   { lo: 1.10, hi: 1.80 },  // 差10%–80%
+};
+function getRankRanges(ur) {
+  const { chong, wen, bao } = RANK_COEFF;
+  const fmt = n => Math.round(n).toLocaleString();
+  return {
+    chongLo: Math.round(ur * chong.lo), chongHi: Math.round(ur * chong.hi),
+    wenLo:   Math.round(ur * wen.lo),   wenHi:   Math.round(ur * wen.hi),
+    baoLo:   Math.round(ur * bao.lo),   baoHi:   Math.round(ur * bao.hi),
+    fChong: `${fmt(ur*chong.lo)}–${fmt(ur*chong.hi)}`,
+    fWen:   `${fmt(ur*wen.lo)}–${fmt(ur*wen.hi)}`,
+    fBao:   `${fmt(ur*bao.lo)}–${fmt(ur*bao.hi)}`,
+  };
+}
+
+// 策略配置（总80个，稳始终32）
+const STRATEGIES = {
+  aggressive:   { label:'激进型',  chong:32, wen:32, bao:16 },
+  balanced:     { label:'稳妥型',  chong:24, wen:32, bao:24 },
+  conservative: { label:'保守型',  chong:16, wen:32, bao:32 },
+};
+
+function enhanceVolunteers(data, userRank) {
+  const ur = parseInt(userRank);
+  if (!ur) return data;
+  const { chong, wen, bao } = RANK_COEFF;
+  return data.map(v => {
+    const nv = { ...v };
+    // 优先使用 ref_rank（2024真实最低录取位次），回退到历年位次
+    const ref = nv.ref_rank || nv.rank_2024 || nv.rank_2023 || nv.rank_2025;
+    if (ref) {
+      const ratio = ref / ur;
+      const origType = nv.type;
+      if      (ratio <  chong.lo) nv.type = 'cx_type';
+      else if (ratio <  chong.hi) nv.type = 'c';
+      else if (ratio <  wen.hi)   nv.type = 'w';
+      else if (ratio <  bao.hi)   nv.type = 'b';
+      else                        nv.type = 'ce_type';
+      // 排位差值（正=比用户好，负=比用户差）
+      nv._rankDiff = ur - ref;
+      if (nv.type === 'cx_type' && origType === 'c') {
+        const warning = '比冲区间还难，数据库原标「冲」但实际录取难度更高';
+        nv.note = nv.note ? (warning + '；' + nv.note) : warning;
+      }
+      if (nv.type === 'ce_type') {
+        const warning = '比保区间还容易，存在捡漏风险提示（浪费分数）';
+        nv.note = nv.note ? (warning + '；' + nv.note) : warning;
+      }
+    }
+    return nv;
+  });
+}
 
 // ─── Init ─────────────────────────────────────
 (async () => {
@@ -645,12 +877,30 @@ function updateAuthUI() {
   document.getElementById('user-greeting').classList.toggle('hidden', !loggedIn);
   if (loggedIn) document.getElementById('user-greeting').textContent = S.user.email.split('@')[0];
   const resBtn = document.getElementById('res-user-btn');
+  const memBtn = document.getElementById('res-member-btn');
   if (resBtn) {
     resBtn.textContent = loggedIn ? `👤 ${S.user.email.split('@')[0]}` : '登录保存';
-    resBtn.onclick = loggedIn ? showPlans : () => openAuth('login');
+    resBtn.onclick = loggedIn ? openMember : () => openAuth('login');
   }
+  if (memBtn) memBtn.classList.toggle('hidden', !loggedIn);
   const saveBtn = document.getElementById('save-btn');
   if (saveBtn) saveBtn.textContent = loggedIn ? '💾 保存方案' : '💾 登录后保存';
+  // 更新 my-plans 账号卡
+  if (loggedIn) {
+    const emailEl = document.getElementById('plans-email');
+    if (emailEl) emailEl.textContent = S.user.email;
+    const isPremium = S.user.user_metadata?.is_premium || false;
+    const badge = document.getElementById('plans-member-badge');
+    const upgBtn = document.getElementById('plans-upgrade-btn');
+    if (badge) {
+      badge.textContent = isPremium ? '✦ 会员版' : '免费版';
+      badge.className = isPremium ? 'member-badge' : 'member-badge free';
+    }
+    if (upgBtn) upgBtn.style.display = isPremium ? 'none' : '';
+    const expiry = S.user.user_metadata?.premium_until;
+    const expEl = document.getElementById('plans-expire');
+    if (expEl) expEl.textContent = isPremium && expiry ? `有效期至 ${new Date(expiry).toLocaleDateString('zh-CN')}` : '';
+  }
 }
 
 // ─── Auth Modal ───────────────────────────────
@@ -713,7 +963,7 @@ function goStep(from, to) {
     const rank  = parseInt(document.getElementById('w-rank').value);
     if (!score || !rank) { toast('请填写分数和排位', 'error'); return; }
     if (score < 300 || score > 750) { toast('分数应在 300–750 之间', 'error'); return; }
-    Object.assign(S.wizard, { score, rank, prov: document.getElementById('w-prov').value });
+    Object.assign(S.wizard, { score, rank, prov: document.getElementById('w-prov').value, track: document.getElementById('w-track').value });
   }
   if (from === 2) {
     Object.assign(S.wizard, {
@@ -728,17 +978,35 @@ function goStep(from, to) {
   showStep(to);
 }
 function buildReview() {
-  const { score, rank, prov, provPref, priority, empMin } = S.wizard;
+  const { score, rank, prov, provPref, priority, empMin, strategy } = S.wizard;
   const provL = {all:'省内+省外均可', in:'优先省内', 'out-only':'只填省外'};
   const priL  = {emp:'就业前景优先', school:'院校档次优先', balance:'综合平衡'};
   const empL  = ['','极差','一般','尚可','较好','优秀'];
+  const st    = STRATEGIES[strategy] || STRATEGIES.balanced;
+  const rr    = getRankRanges(rank);
+  const trackL = { phy:'物理类', his:'历史类' };
   document.getElementById('review-grid').innerHTML = `
     <div class="rv-item"><div class="rv-lbl">高考分数</div><div class="rv-val">${score} 分</div></div>
     <div class="rv-item"><div class="rv-lbl">省内排位</div><div class="rv-val">${rank.toLocaleString()} 名</div></div>
+    <div class="rv-item"><div class="rv-lbl">科目类别</div><div class="rv-val" style="font-size:13px">${trackL[S.wizard.track]||'物理类'}</div></div>
     <div class="rv-item"><div class="rv-lbl">省份</div><div class="rv-val">${prov}</div></div>
     <div class="rv-item"><div class="rv-lbl">出省意愿</div><div class="rv-val" style="font-size:13px">${provL[provPref]}</div></div>
     <div class="rv-item"><div class="rv-lbl">优先考虑</div><div class="rv-val" style="font-size:13px">${priL[priority]}</div></div>
     <div class="rv-item"><div class="rv-lbl">最低就业</div><div class="rv-val" style="font-size:13px">${empL[empMin]}（${empMin}星）</div></div>`;
+  // 更新策略标签和排位区间提示
+  const stratLbl = document.getElementById('strat-label');
+  if (stratLbl) stratLbl.textContent = `冲${st.chong} / 稳${st.wen} / 保${st.bao}`;
+  const rangeLbl = document.getElementById('strat-range-label');
+  if (rangeLbl) rangeLbl.innerHTML =
+    `冲 <b style="color:var(--gold)">${rr.fChong}</b> · 稳 <b style="color:var(--gold)">${rr.fWen}</b> · 保 <b style="color:var(--gold)">${rr.fBao}</b>`;
+}
+function selectStrategy(key) {
+  S.wizard.strategy = key;
+  document.querySelectorAll('.strat-box').forEach(el => { el.style.borderColor = ''; el.style.background = ''; });
+  const sb = document.getElementById('sb-' + key);
+  if (sb) { sb.style.borderColor = 'var(--gold)'; sb.style.background = 'var(--gold3)'; }
+  const st = STRATEGIES[key];
+  document.getElementById('strat-label').textContent = `冲${st.chong} / 稳${st.wen} / 保${st.bao}`;
 }
 function startWizard() { showView('wizard'); showStep(1); }
 
@@ -748,7 +1016,7 @@ async function generateResults() {
   try {
     const { data, error } = await sb.from('volunteers').select('*').eq('is_active', true).order('no');
     if (error) throw error;
-    S.volunteers = data;
+    S.volunteers = enhanceVolunteers(data, S.wizard.rank);
     S.currentPlanId = null;
     S.currentShareToken = null;
     document.getElementById('share-btn').style.display = 'none';
@@ -761,6 +1029,13 @@ async function generateResults() {
       <div><div class="stu-v">${parseInt(S.wizard.rank).toLocaleString()}</div><div class="stu-l">省内排位</div></div>
       <div><div class="stu-v">${S.wizard.prov}</div><div class="stu-l">省份</div></div>`;
     document.getElementById('s-warn').textContent = S.volunteers.filter(v => v.has_group_warn).length;
+    // 更新统计栏子标题为动态排位区间
+    const rr = getRankRanges(S.wizard.rank);
+    if (document.getElementById('s-c-sub')) {
+      document.getElementById('s-c-sub').textContent = `位次 ${rr.fChong}`;
+      document.getElementById('s-w-sub').textContent = `位次 ${rr.fWen}`;
+      document.getElementById('s-b-sub').textContent = `位次 ${rr.fBao}`;
+    }
     S.filtered = [...S.volunteers];
     applyFilters();
     showView('results');
@@ -855,11 +1130,12 @@ async function loadPlan(planId, shareToken) {
       .eq('plan_id', planId).eq('is_removed', false)
       .order('custom_order');
     if (error) throw error;
-    S.volunteers = items.map(i => i.volunteers);
+    let volsRaw = items.map(i => i.volunteers);
     S.currentPlanId = planId;
     S.currentShareToken = shareToken;
     const { data: plan } = await sb.from('plans').select('*').eq('id', planId).single();
     Object.assign(S.wizard, { score: plan.score, rank: plan.rank, prov: plan.province, provPref: plan.prov_pref });
+    S.volunteers = enhanceVolunteers(volsRaw, S.wizard.rank);
     S.filtered = [...S.volunteers];
     applyFilters();
     document.getElementById('stu-bar').innerHTML = `
@@ -884,7 +1160,85 @@ async function deletePlan(id) {
   showPlans();
 }
 
-// ─── Load Shared Plan ─────────────────────────
+// ─── Member Modal ─────────────────────────────
+let _selectedTier = 'premium';
+let _selectedDuration = 'year';
+let _selectedPay = 'wechat';
+
+function openMember() {
+  if (!S.user) { openAuth('login'); return; }
+  const email = S.user.email;
+  const createdAt = S.user.created_at ? new Date(S.user.created_at).toLocaleDateString('zh-CN') : '—';
+  document.getElementById('member-email').textContent = email;
+  document.getElementById('member-since').textContent = `注册时间：${createdAt}`;
+  // 会员状态（从 user_metadata 或 profiles 表读取，此处演示默认免费版）
+  const isPremium = S.user.user_metadata?.is_premium || false;
+  const expiry    = S.user.user_metadata?.premium_until || null;
+  const badge = document.getElementById('member-status-badge');
+  if (isPremium) {
+    badge.textContent = '✦ 会员版';
+    badge.className = 'member-badge';
+    document.getElementById('member-action-btn').textContent = '续费 / 管理';
+    if (expiry) badge.title = `有效期至 ${new Date(expiry).toLocaleDateString('zh-CN')}`;
+  } else {
+    badge.textContent = '免费版';
+    badge.className = 'member-badge free';
+    document.getElementById('member-action-btn').textContent = '升级会员';
+  }
+  selectTier(_selectedTier);
+  document.getElementById('member-modal').classList.remove('hidden');
+}
+function closeMember() {
+  document.getElementById('member-modal').classList.add('hidden');
+}
+function selectTier(tier) {
+  _selectedTier = tier;
+  document.getElementById('tier-free').classList.toggle('selected', tier === 'free');
+  document.getElementById('tier-premium').classList.toggle('selected', tier === 'premium');
+  document.getElementById('duration-row').style.display = tier === 'premium' ? '' : 'none';
+  document.getElementById('pay-row').style.display      = tier === 'premium' ? '' : 'none';
+  document.getElementById('member-action-btn').textContent = tier === 'free' ? '当前套餐' : '立即支付';
+  document.getElementById('member-action-btn').disabled = tier === 'free';
+  if (tier === 'premium') selectDuration(_selectedDuration);
+}
+function selectDuration(dur) {
+  _selectedDuration = dur;
+  const prices = { month: { show: '¥29', orig: '原价 ¥29', label: '/月' }, year: { show: '¥99', orig: '原价 ¥198', label: '/年' }, life: { show: '¥199', orig: '原价 ¥398', label: ' 永久' } };
+  const p = prices[dur];
+  document.getElementById('tier-price-display').innerHTML = `${p.show}<span> ${p.label}</span>`;
+  document.getElementById('tier-price-orig').textContent = p.orig;
+  ['month','year','life'].forEach(d => document.getElementById('dur-'+d).classList.toggle('active', d === dur));
+}
+function selectPay(method) {
+  _selectedPay = method;
+  ['wechat','alipay'].forEach(m => document.getElementById('pay-'+m).classList.toggle('active', m === method));
+  const hint = document.getElementById('pay-qr-hint');
+  hint.textContent = method === 'wechat' ? '微信扫码支付' : '支付宝扫码支付';
+}
+async function handleMemberAction() {
+  if (_selectedTier === 'free') return;
+  // 记录支付意图（实际需接入微信/支付宝 API）
+  toast('正在生成支付订单…', '');
+  try {
+    await sb.from('payment_orders').insert({
+      user_id: S.user.id,
+      plan: _selectedDuration,
+      method: _selectedPay,
+      amount: { month: 29, year: 99, life: 199 }[_selectedDuration],
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    });
+    document.getElementById('pay-qr-hint').textContent = '请使用' + (_selectedPay === 'wechat' ? '微信' : '支付宝') + '扫码完成支付（功能对接中）';
+    document.getElementById('pay-qr-img').style.display = 'flex';
+    toast('订单已创建，请扫码支付', 'success');
+  } catch(e) {
+    // 表不存在时静默忽略，不影响体验
+    document.getElementById('pay-qr-hint').textContent = '支付功能即将上线，敬请期待！';
+    document.getElementById('pay-qr-img').style.display = 'flex';
+  }
+}
+
+
 async function loadShared(token) {
   setLoading(true, '加载分享方案...');
   try {
@@ -896,9 +1250,10 @@ async function loadShared(token) {
       .eq('plan_id', plan.id).eq('is_removed', false)
       .order('custom_order');
     if (ie) throw ie;
-    S.volunteers = items.map(i => i.volunteers);
-    S.filtered = [...S.volunteers];
+    let volsRaw = items.map(i => i.volunteers);
     Object.assign(S.wizard, { score: plan.score, rank: plan.rank, prov: plan.province, provPref: plan.prov_pref });
+    S.volunteers = enhanceVolunteers(volsRaw, S.wizard.rank);
+    S.filtered = [...S.volunteers];
     document.getElementById('shared-stu-bar').innerHTML = `
       <div><div class="stu-v">${plan.score}分</div><div class="stu-l">分数</div></div>
       <div><div class="stu-v">${plan.rank.toLocaleString()}</div><div class="stu-l">省内排位</div></div>
@@ -948,6 +1303,11 @@ function applyFilters() {
   doSort(); render();
   document.getElementById('f-cnt').textContent = `显示 ${S.filtered.length}/${S.volunteers.length}`;
   document.getElementById('s-total').textContent = S.filtered.length;
+  if(document.getElementById('s-c')){
+    document.getElementById('s-c').textContent = S.filtered.filter(v=>v.type==='c' || v.type==='cx_type').length;
+    document.getElementById('s-w').textContent = S.filtered.filter(v=>v.type==='w').length;
+    document.getElementById('s-b').textContent = S.filtered.filter(v=>v.type==='b' || v.type==='ce_type').length;
+  }
 }
 function doSort() {
   const ki = { no:0, school:'school', r23:'rank_2023', r24:'rank_2024', r25:'rank_2025', fee:'fee', emp:'emp_score', ruanke:'ruanke_rank', postgrad:'postgrad_rate' };
@@ -968,9 +1328,20 @@ function render() {
   if (!S.filtered.length) { tbody.innerHTML=''; noRes.classList.remove('hidden'); return; }
   noRes.classList.add('hidden');
   const ec={1:'#f87171',2:'#fb923c',3:'#fbbf24',4:'#6ee7b7',5:'#4ade80'};
-  const el={1:'极差',2:'一般',3:'尚可',4:'较好',5:'优秀'};
-  const tb={c:'<span class="badge bc">冲</span>',w:'<span class="badge bw">稳</span>',b:'<span class="badge bb">保</span>'};
-  const sl={c:'🔵 冲（志愿1–24）— 位次参考 13,000–19,000',w:'🟢 稳（志愿25–56）— 位次参考 19,000–23,000',b:'🟡 保（志愿57–80）— 位次参考 23,000–50,000'};
+  const tb={
+    c:'<span class="badge bc">冲</span>',w:'<span class="badge bw">稳</span>',b:'<span class="badge bb">保</span>',
+    cx_type:'<span class="badge" style="background:rgba(239,68,68,.22);color:#fca5a5;border:1px solid rgba(239,68,68,.35)">超难</span>',
+    ce_type:'<span class="badge" style="background:rgba(167,139,250,.22);color:#c4b5fd;border:1px solid rgba(167,139,250,.35)">超易</span>'
+  };
+  const _rr  = S.wizard.rank ? getRankRanges(S.wizard.rank) : null;
+  const _st  = STRATEGIES[S.wizard.strategy] || STRATEGIES.balanced;
+  const sl={
+    c:       `🔵 冲（×${_st.chong}）— 位次 ${_rr ? _rr.fChong : '—'}（好5–20%，有机会但不确定）`,
+    w:       `🟢 稳（×${_st.wen}）— 位次 ${_rr ? _rr.fWen   : '—'}（±5–10%，正好在线上下）`,
+    b:       `🟡 保（×${_st.bao}）— 位次 ${_rr ? _rr.fBao   : '—'}（差10–80%，明显低于自身）`,
+    cx_type: '🔴 超难 — 比冲区间还难（位次好于20%），存在极大录取风险',
+    ce_type: '🟣 超易 — 比保区间还容易（位次差超80%），录取概率高但浪费分数',
+  };
   let html='', lastType='';
   S.filtered.forEach(v => {
     if (S.sortKey==='no' && S.sortAsc && v.type !== lastType) {
@@ -983,7 +1354,13 @@ function render() {
     const gwH = v.group_warn ? `<div class="gw">⚠ ${v.group_warn}</div>` : '';
     function fR(n) { return n==null ? '<span class="rna">首年</span>' : `<span class="rv">${parseInt(n).toLocaleString()}</span>`; }
     let trd=''; if(v.rank_2024&&v.rank_2025){const d=v.rank_2025-v.rank_2024;if(Math.abs(d)>=1000) trd=`<div class="rtrd ${d>0?'rup':'rdn'}">${d>0?'▲竞争↑':'▼竞争↓'} ${Math.round(Math.abs(d)/1000)}k</div>`;}
-    const feeH = v.fee>10000 ? `<div class="fee-v fee-high">${(v.fee/10000).toFixed(1)}万</div><div class="fee-s">中外合作</div>` : `<div class="fee-v">${v.fee.toLocaleString()}</div><div class="fee-s">元/年</div>`;
+    // 与用户排位差值（ref_rank 优先）
+    let diffH = '';
+    if (v._rankDiff != null) {
+      const sign = v._rankDiff >= 0 ? '+' : '';
+      const dc   = v._rankDiff >= 0 ? 'color:#6ee7b7' : 'color:#f87171';
+      diffH = `<div style="font-size:9px;${dc};margin-top:1px">${sign}${v._rankDiff.toLocaleString()}</div>`;
+    } = v.fee>10000 ? `<div class="fee-v fee-high">${(v.fee/10000).toFixed(1)}万</div><div class="fee-s">中外合作</div>` : `<div class="fee-v">${v.fee.toLocaleString()}</div><div class="fee-s">元/年</div>`;
     // 软科排名
     const catLabel={'medical':'医药类','finance':'财经类','lang':'语言类','normal':'师范类','agri':'农业类','law':'政法类','tcm':'中医药类'};
     let rkH = '<span class="rna">—</span>';
@@ -1018,7 +1395,7 @@ function render() {
       <td><div class="sname">${v.school}</div><div class="sloc">📍 ${v.city}</div></td>
       <td><div class="major-t">${v.major}</div>${gwH}</td>
       <td class="rank-cell">${fR(v.rank_2023)}</td>
-      <td class="rank-cell">${fR(v.rank_2024)}</td>
+      <td class="rank-cell">${fR(v.rank_2024)}${diffH}</td>
       <td class="rank-cell">${fR(v.rank_2025)}${trd}</td>
       <td style="text-align:center">${rkH}</td>
       <td>${feeH}</td>
@@ -1036,7 +1413,7 @@ function render() {
 // ─── Download ─────────────────────────────────
 const HDR = ['序号','类型','院校','城市','省份','建议专业方向','2023位次','2024位次','2025位次','软科综合排名','软科分类','学费/年(元)','就业评级','保研率%','城市等级','转专业政策','双一流学科','主要就业城市','备注','专业组避坑说明','就业受限','组内有坑'];
 function getRows() {
-  const tl={c:'冲',w:'稳',b:'保'}, el=['','极差','一般','尚可','较好','优秀'];
+  const tl={c:'冲',w:'稳',b:'保',cx_type:'超难',ce_type:'超易'}, el=['','极差','一般','尚可','较好','优秀'];
   const catLabel={'medical':'医药类','finance':'财经类','lang':'语言类','normal':'师范类','agri':'农业类','law':'政法类','tcm':'中医药类'};
   return S.filtered.map(v => {
     const catStr = v.ruanke_cat ? (catLabel[v.ruanke_cat]||v.ruanke_cat) + (v.ruanke_cat_rank?` 第${v.ruanke_cat_rank}名`:'上榜') : '';
@@ -1058,7 +1435,7 @@ function dlCSV() {
   sb.from('analytics_events').insert({ event_type:'plan_downloaded', plan_id: S.currentPlanId, user_id: S.user?.id, meta:{format:'csv'} });
 }
 function dlExcel() {
-  const bgMap={c:'#dbeafe',w:'#dcfce7',b:'#fef9c3'};
+  const bgMap={c:'#dbeafe',w:'#dcfce7',b:'#fef9c3',cx_type:'#fecaca',ce_type:'#e9d5ff'};
   const rowsH = getRows().map((r, i) => {
     const bg = S.filtered[i].is_poor_prospect ? '#fef3c7' : bgMap[S.filtered[i].type] || '#fff';
     return '<tr style="background:'+bg+'">'+r.map(c=>'<td>'+String(c??'')+'</td>').join('')+'</tr>';

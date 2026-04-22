@@ -1360,7 +1360,8 @@ function render() {
       const sign = v._rankDiff >= 0 ? '+' : '';
       const dc   = v._rankDiff >= 0 ? 'color:#6ee7b7' : 'color:#f87171';
       diffH = `<div style="font-size:9px;${dc};margin-top:1px">${sign}${v._rankDiff.toLocaleString()}</div>`;
-    } = v.fee>10000 ? `<div class="fee-v fee-high">${(v.fee/10000).toFixed(1)}万</div><div class="fee-s">中外合作</div>` : `<div class="fee-v">${v.fee.toLocaleString()}</div><div class="fee-s">元/年</div>`;
+    }
+    const feeH = v.fee>10000 ? `<div class="fee-v fee-high">${(v.fee/10000).toFixed(1)}万</div><div class="fee-s">中外合作</div>` : `<div class="fee-v">${v.fee.toLocaleString()}</div><div class="fee-s">元/年</div>`;
     // 软科排名
     const catLabel={'medical':'医药类','finance':'财经类','lang':'语言类','normal':'师范类','agri':'农业类','law':'政法类','tcm':'中医药类'};
     let rkH = '<span class="rna">—</span>';

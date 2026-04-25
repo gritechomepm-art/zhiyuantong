@@ -245,6 +245,52 @@ td{padding:9px 11px;vertical-align:top}
 
 @media(max-width:900px){.stat-grid{grid-template-columns:repeat(3,1fr)}.res-stu{display:none}.form-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.res-hinner{padding:0 1rem}.res-hero,.filter-wrap,.table-wrap{padding-left:1rem;padding-right:1rem}.stat-grid{grid-template-columns:1fr 1fr}}
+
+/* ── 移动端卡片布局 ── */
+@media(max-width:640px){
+  .tbl-scroll{overflow:visible}
+  table thead{display:none}
+  table tbody tr{display:block;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;padding:12px 14px;position:relative}
+  table tbody tr td{display:flex;align-items:flex-start;gap:8px;padding:3px 0;border:none;font-size:12px}
+  table tbody tr td::before{content:attr(data-lbl);flex-shrink:0;width:72px;color:var(--text3);font-size:11px;padding-top:1px}
+  table tbody tr td:first-child{position:absolute;top:10px;right:10px;width:auto}
+  table tbody tr td:first-child::before{display:none}
+  .rank-cell{font-size:12px}
+  .fee-high{color:#f87171!important}
+}
+
+/* ── 选择模式 ── */
+.sel-mode tr td:first-child{cursor:pointer}
+.sel-mode tr.row-selected{background:rgba(200,169,110,.12)!important;outline:1px solid var(--gold)}
+.row-cb{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);background:var(--navy2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.row-cb.checked{background:var(--gold);border-color:var(--gold);color:var(--navy);font-size:11px;font-weight:700}
+.sel-bar{position:fixed;bottom:0;left:0;right:0;z-index:150;background:rgba(13,27,42,.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;transform:translateY(100%);transition:transform .25s ease}
+.sel-bar.show{transform:translateY(0)}
+.sel-progress{display:flex;align-items:center;gap:12px}
+.sel-count{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:var(--gold)}
+.sel-track{width:180px;height:6px;background:var(--navy2);border-radius:3px;overflow:hidden}
+.sel-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .2s}
+.sel-hint{font-size:12px;color:var(--text3)}
+
+/* ── 收藏 ── */
+.fav-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:2px;opacity:.4;transition:all .15s;line-height:1}
+.fav-btn.active{opacity:1;filter:drop-shadow(0 0 4px #fbbf24)}
+.compare-panel{position:fixed;bottom:0;left:0;right:0;z-index:140;background:var(--navy2);border-top:2px solid var(--gold);max-height:60vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s ease}
+.compare-panel.show{transform:translateY(0)}
+.compare-head{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--navy2);z-index:1}
+
+/* ── 位次盈余 ── */
+.rank-surplus{font-size:10px;padding:1px 5px;border-radius:3px;margin-top:2px;font-weight:500;display:inline-block}
+.surplus-pos{background:rgba(34,197,94,.15);color:#6ee7b7}
+.surplus-neg{background:rgba(239,68,68,.15);color:#f87171}
+
+/* ── 学费预警 ── */
+.fee-alert{display:inline-block;background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.35);border-radius:3px;font-size:9px;font-weight:700;padding:1px 4px;margin-top:2px}
+
+/* ── 报错按钮 ── */
+.report-btn{background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);padding:1px 3px;border-radius:3px;opacity:0;transition:opacity .15s;line-height:1}
+tr:hover .report-btn{opacity:1}
+.report-btn:hover{background:rgba(239,68,68,.15);color:#fca5a5}
 </style>
 </head>
 <body>
@@ -453,8 +499,8 @@ td{padding:9px 11px;vertical-align:top}
   <div class="wiz-head"><h2>考生基本信息</h2><p>填写真实高考数据，系统将据此推算冲稳保梯度</p></div>
   <div class="wiz-body">
     <div class="form-grid">
-      <div class="field"><label>高考总分 *</label><input type="number" id="w-score" placeholder="如 600" min="400" max="750"><div class="hint">满分 750（不含加分）</div></div>
-      <div class="field"><label>省内排位 *</label><input type="number" id="w-rank" placeholder="如 20000" min="1"><div class="hint">物理类或历史类均适用，以成绩公布后官方位次为准</div></div>
+      <div class="field"><label>高考总分 *</label><input type="number" id="w-score" placeholder="如 600" oninput="saveWizCache()" min="400" max="750"><div class="hint">满分 750（不含加分）</div></div>
+      <div class="field"><label>省内排位 *</label><input type="number" id="w-rank" placeholder="如 20000" min="1" oninput="saveWizCache()"><div class="hint">物理类或历史类均适用，以成绩公布后官方位次为准</div></div>
     </div>
     <div class="form-grid">
       <div class="field"><label>所在省份</label><select id="w-prov"><option value="广东" selected>广东省</option><option value="其他">其他省份（仅供参考）</option></select></div>
@@ -586,6 +632,9 @@ td{padding:9px 11px;vertical-align:top}
       <button class="btn btn-ghost btn-sm" id="share-btn" onclick="showShareModal()" style="display:none">🔗 分享</button>
       <button class="btn btn-ghost btn-sm" onclick="dlCSV()">⬇ CSV</button>
       <button class="btn btn-ghost btn-sm" onclick="dlExcel()">⬇ Excel</button>
+      <button class="btn btn-ghost btn-sm" onclick="dlPDF()">⬇ PDF</button>
+      <button class="btn btn-gold btn-sm" onclick="toggleSelMode()" id="sel-mode-btn">📋 选45个→官方表</button>
+      <button class="btn btn-ghost btn-sm" id="compare-btn" onclick="showCompare()" style="display:none">⚖ 对比收藏(<span id="fav-count">0</span>)</button>
       <div class="user-btn" id="res-user-btn" onclick="openAuth('login')">登录保存</div>
       <div class="user-btn hidden" id="res-member-btn" onclick="openMember()" style="color:var(--gold)">✦ 会员</div>
     </div>
@@ -669,6 +718,8 @@ td{padding:9px 11px;vertical-align:top}
       <table>
         <thead>
           <tr>
+            <th style="width:28px" id="th-cb"></th>
+            <th style="width:28px"></th>
             <th style="width:36px" onclick="srt('no')"># ↕</th>
             <th style="width:90px">类型</th>
             <th style="width:130px" onclick="srt('school')">院校 ↕</th>
@@ -694,9 +745,72 @@ td{padding:9px 11px;vertical-align:top}
 </div>
 </section>
 
-<!-- ════════════════════
-     MY PLANS
-════════════════════ -->
+<!-- ── 选择底栏 ── -->
+<div class="sel-bar" id="sel-bar">
+  <div class="sel-progress">
+    <div class="sel-count"><span id="sel-n">0</span>/45</div>
+    <div>
+      <div class="sel-track"><div class="sel-fill" id="sel-fill" style="width:0%"></div></div>
+      <div class="sel-hint" id="sel-hint">点击表格行选取志愿，最多45个</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <select id="sel-adjust" style="background:var(--navy2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 10px;font-size:12px">
+      <option value="yes">服从调剂：全部服从</option>
+      <option value="no">服从调剂：全部不服从</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="clearSel()">清空</button>
+    <button class="btn btn-gold btn-sm" id="sel-export-btn" onclick="dlOfficial()" disabled>📄 导出官方志愿表</button>
+    <button class="btn btn-ghost btn-sm" onclick="toggleSelMode()">取消</button>
+  </div>
+</div>
+
+<!-- ── 对比面板 ── -->
+<div class="compare-panel" id="compare-panel">
+  <div class="compare-head">
+    <div style="font-weight:600;font-size:14px">⚖ 收藏对比 <span id="compare-count" style="color:var(--gold)"></span></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="clearFavorites()">清空收藏</button>
+      <button class="btn btn-ghost btn-sm" onclick="hideCompare()">关闭 ✕</button>
+    </div>
+  </div>
+  <div id="compare-body" style="padding:12px 20px;overflow-x:auto">
+    <table style="width:100%;font-size:12px;border-collapse:collapse;min-width:700px">
+      <thead><tr id="compare-head-row" style="color:var(--text3)"></tr></thead>
+      <tbody id="compare-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── 报错弹窗 ── -->
+<div id="feedback-modal" class="modal-bg hidden">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head"><h3>数据报错 / 反馈</h3><button class="modal-close" onclick="closeFeedback()">×</button></div>
+    <div class="modal-body" style="padding:1.25rem 1.5rem">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px" id="fb-school-name"></div>
+      <div class="field">
+        <label style="font-size:12px;color:var(--text3);margin-bottom:6px;display:block">错误类型</label>
+        <select id="fb-type" style="width:100%;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
+          <option value="rank">位次数据有误</option>
+          <option value="fee">学费信息有误</option>
+          <option value="major">专业组信息有误</option>
+          <option value="emp">就业数据有误</option>
+          <option value="other">其他错误</option>
+        </select>
+      </div>
+      <div class="field" style="margin-top:10px">
+        <label style="font-size:12px;color:var(--text3);margin-bottom:6px;display:block">具体说明（可选）</label>
+        <textarea id="fb-note" rows="3" style="width:100%;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;resize:vertical" placeholder="例如：2024年位次应为18500，不是21000"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closeFeedback()">取消</button>
+      <button class="btn btn-gold btn-sm" onclick="submitFeedback()">提交反馈</button>
+    </div>
+  </div>
+</div>
+
+
 <section id="my-plans" class="page hidden">
 <div style="max-width:900px;margin:0 auto;padding:2rem">
   <!-- 账号 & 会员状态卡 -->
@@ -740,6 +854,7 @@ td{padding:9px 11px;vertical-align:top}
       <button class="btn btn-ghost btn-sm" onclick="showView('landing')">🏠 首页</button>
       <button class="btn btn-ghost btn-sm" onclick="dlCSV()">⬇ CSV</button>
       <button class="btn btn-ghost btn-sm" onclick="dlExcel()">⬇ Excel</button>
+      <button class="btn btn-ghost btn-sm" onclick="dlPDF()">⬇ PDF</button>
     </div>
   </div>
 </header>
@@ -772,14 +887,24 @@ let S = {
   sortKey: 'no', sortAsc: true,
   filters: { type:'all', loc:'all', emp:'all', sp:'none', tier:'all', transfer:'all', yixiu:'all' },
   search: '', segVal: 1,
+  selected: new Set(),   // 官方表选取（最多45）
+  favorites: new Set(),  // 收藏对比
+  selMode: false,
   wizard: { score:'', rank:'', prov:'广东', provPref:'all', priority:'emp', majorPrefs:['cs','ee'], empMin:3, chemAtt:1, strategy:'balanced' }
 };
 
 // 动态分类区间系数（基于行业通行经验值）
+// 说明：ratio = ref_rank ÷ user_rank
+//   ratio < 0.80  → 超难（学校比你好20%以上，几乎没希望）
+//   0.80–0.95     → 冲  （学校比你好5–20%，有机会但不确定）
+//   0.95–1.10     → 稳  （±5–10%，正好在线上下）
+//   1.10–1.80     → 保  （学校比你差10–80%，明显低于自身）
+//   ≥ 1.80        → 超易（学校比你差80%以上，浪费分数）
+// 示例：user_rank=28000，冲区间 = 22400–26600（好5–20%）
 const RANK_COEFF = {
-  chong: { lo: 0.80, hi: 0.95 },  // 好5%–20%
-  wen:   { lo: 0.95, hi: 1.10 },  // ±5–10%
-  bao:   { lo: 1.10, hi: 1.80 },  // 差10%–80%
+  chong: { lo: 0.80, hi: 0.95 },
+  wen:   { lo: 0.95, hi: 1.10 },
+  bao:   { lo: 1.10, hi: 1.80 },
 };
 function getRankRanges(ur) {
   const { chong, wen, bao } = RANK_COEFF;
@@ -807,26 +932,30 @@ function enhanceVolunteers(data, userRank) {
   const { chong, wen, bao } = RANK_COEFF;
   return data.map(v => {
     const nv = { ...v };
-    // 优先使用 ref_rank（2024真实最低录取位次），回退到历年位次
-    const ref = nv.ref_rank || nv.rank_2024 || nv.rank_2023 || nv.rank_2025;
+    // 优先 ref_rank，其次历年实际位次（取最新一年）
+    const ref = nv.ref_rank || nv.rank_2024 || nv.rank_2025 || nv.rank_2023;
+    const origType = nv.type;
     if (ref) {
       const ratio = ref / ur;
-      const origType = nv.type;
       if      (ratio <  chong.lo) nv.type = 'cx_type';
       else if (ratio <  chong.hi) nv.type = 'c';
       else if (ratio <  wen.hi)   nv.type = 'w';
       else if (ratio <  bao.hi)   nv.type = 'b';
       else                        nv.type = 'ce_type';
-      // 排位差值（正=比用户好，负=比用户差）
       nv._rankDiff = ur - ref;
+      // 提示：数据库标冲但实际更难
       if (nv.type === 'cx_type' && origType === 'c') {
-        const warning = '比冲区间还难，数据库原标「冲」但实际录取难度更高';
+        const warning = '比冲区间还难（好于你20%以上），录取风险极高';
         nv.note = nv.note ? (warning + '；' + nv.note) : warning;
       }
       if (nv.type === 'ce_type') {
-        const warning = '比保区间还容易，存在捡漏风险提示（浪费分数）';
+        const warning = '比保区间还容易（差于你80%以上），浪费分数风险';
         nv.note = nv.note ? (warning + '；' + nv.note) : warning;
       }
+    }
+    // ref 为空时保留原 type，但标注"无排位数据"
+    else {
+      nv._noRankData = true;
     }
     return nv;
   });
@@ -964,6 +1093,7 @@ function showStep(n) {
     else if (i===n){ sn.className='step-num active'; sn.textContent=i; sl.className='step-lbl active'; }
     else        { sn.className='step-num todo'; sn.textContent=i; sl.className='step-lbl'; }
   });
+  if (n === 1) restoreWizCache();
 }
 function setSeg(val, el) {
   S.segVal = val;
@@ -1056,7 +1186,234 @@ function selectStrategy(key) {
 }
 function startWizard() { showView('wizard'); showStep(1); }
 
-// ─── Generate Results ─────────────────────────
+// ─── ③ LocalStorage 向导缓存 ─────────────────
+const WIZ_KEY = 'gaokao_wiz_cache';
+function saveWizCache() {
+  try {
+    localStorage.setItem(WIZ_KEY, JSON.stringify({
+      score: document.getElementById('w-score')?.value || '',
+      rank:  document.getElementById('w-rank')?.value  || '',
+      prov:  document.getElementById('w-prov')?.value  || '广东',
+      track: document.getElementById('w-track')?.value || 'phy',
+      ts: Date.now()
+    }));
+  } catch(_) {}
+}
+function restoreWizCache() {
+  try {
+    const raw = localStorage.getItem(WIZ_KEY);
+    if (!raw) return;
+    const c = JSON.parse(raw);
+    if (Date.now() - c.ts > 2 * 3600 * 1000) { localStorage.removeItem(WIZ_KEY); return; }
+    if (c.score) document.getElementById('w-score').value = c.score;
+    if (c.rank)  document.getElementById('w-rank').value  = c.rank;
+    if (c.prov)  document.getElementById('w-prov').value  = c.prov;
+    if (c.track) { document.getElementById('w-track').value = c.track; onTrackChange(c.track); }
+    toast('已恢复上次填写进度', 'success');
+  } catch(_) {}
+}
+
+// ─── ⑥ 收藏 & 对比 ───────────────────────────
+function toggleFav(id) {
+  if (S.favorites.has(id)) S.favorites.delete(id);
+  else S.favorites.add(id);
+  const cnt = S.favorites.size;
+  document.getElementById('fav-count').textContent = cnt;
+  document.getElementById('compare-btn').style.display = cnt > 0 ? '' : 'none';
+  render();
+}
+function clearFavorites() {
+  S.favorites.clear();
+  document.getElementById('fav-count').textContent = 0;
+  document.getElementById('compare-btn').style.display = 'none';
+  hideCompare(); render();
+}
+function showCompare() {
+  const favs = S.volunteers.filter(v => S.favorites.has(v.id));
+  if (!favs.length) return;
+  const tl = {c:'冲',w:'稳',b:'保',cx_type:'超难',ce_type:'超易'};
+  const fields = [
+    ['参考类型', v => tl[v.type]||v.type||'—'],
+    ['院校',     v => v.school||'—'],
+    ['专业方向', v => v.major||'—'],
+    ['2024位次', v => v.rank_2024 ? parseInt(v.rank_2024).toLocaleString() : '首年'],
+    ['2025位次', v => v.rank_2025 ? parseInt(v.rank_2025).toLocaleString() : '首年'],
+    ['位次盈余', v => v._rankDiff!=null ? (v._rankDiff>=0?`+${v._rankDiff.toLocaleString()}`:`${v._rankDiff.toLocaleString()}`) : '—'],
+    ['学费/年',  v => v.fee ? (v.fee>10000?`${(v.fee/10000).toFixed(1)}万`:`${v.fee.toLocaleString()}元`) : '—'],
+    ['保研率',   v => v.postgrad_rate!=null ? v.postgrad_rate+'%' : '—'],
+    ['城市',     v => v.city_tier ? `${v.city_tier}·${v.city_name||v.city}` : v.city||'—'],
+    ['转专业',   v => v.transfer_policy||'—'],
+  ];
+  document.getElementById('compare-count').textContent = `${favs.length}所`;
+  document.getElementById('compare-head-row').innerHTML =
+    '<th style="padding:8px 10px;color:var(--text3);font-size:11px">指标</th>' +
+    favs.map(v=>`<th style="padding:8px 10px;text-align:center;font-size:12px;min-width:120px">${v.school}<br><span style="font-weight:400;font-size:10px;color:var(--text3)">${(v.major||'').slice(0,12)}</span></th>`).join('');
+  document.getElementById('compare-tbody').innerHTML = fields.map(([lbl, fn]) =>
+    `<tr style="border-bottom:1px solid var(--border2)">
+      <td style="color:var(--text3);padding:7px 10px;font-size:11px;white-space:nowrap">${lbl}</td>
+      ${favs.map(v=>`<td style="padding:7px 10px;text-align:center;font-size:12px">${fn(v)}</td>`).join('')}
+    </tr>`
+  ).join('');
+  document.getElementById('compare-panel').classList.add('show');
+}
+function hideCompare() { document.getElementById('compare-panel').classList.remove('show'); }
+
+// ─── ⑦ 选择模式 & 官方表导出 ────────────────
+function toggleSelMode() {
+  S.selMode = !S.selMode;
+  S.selected.clear();
+  const bar = document.getElementById('sel-bar');
+  const btn = document.getElementById('sel-mode-btn');
+  bar.classList.toggle('show', S.selMode);
+  btn.textContent = S.selMode ? '✕ 退出选择' : '📋 选45个→官方表';
+  btn.className   = S.selMode ? 'btn btn-ghost btn-sm' : 'btn btn-gold btn-sm';
+  document.querySelector('.tbl-box')?.classList.toggle('sel-mode', S.selMode);
+  updateSelBar(); render();
+}
+function rowClick(id) {
+  if (!S.selMode) return;
+  if (S.selected.has(id)) {
+    S.selected.delete(id);
+  } else {
+    if (S.selected.size >= 45) { toast('最多选45个志愿', 'error'); return; }
+    S.selected.add(id);
+  }
+  updateSelBar(); render();
+}
+function clearSel() { S.selected.clear(); updateSelBar(); render(); }
+function updateSelBar() {
+  const n = S.selected.size;
+  document.getElementById('sel-n').textContent = n;
+  document.getElementById('sel-fill').style.width = (n / 45 * 100) + '%';
+  document.getElementById('sel-hint').textContent =
+    n === 45 ? '✅ 已选满45个，可导出官方表' : `点击行选取，还需 ${45-n} 个`;
+  document.getElementById('sel-export-btn').disabled = n === 0;
+}
+function dlOfficial() {
+  const adjust  = document.getElementById('sel-adjust').value;
+  const selVols = [...S.selected]
+    .map(id => S.volunteers.find(v => v.id === id))
+    .filter(Boolean);
+  if (!selVols.length) { toast('请先选取志愿', 'error'); return; }
+
+  const date  = new Date().toLocaleDateString('zh-CN');
+  const score = S.wizard.score || '—';
+  const rank  = S.wizard.rank  ? parseInt(S.wizard.rank).toLocaleString() : '—';
+  const tl    = {c:'冲',w:'稳',b:'保',cx_type:'超难',ce_type:'超易'};
+  const tc    = {c:'#f97316',w:'#22c55e',b:'#a78bfa',cx_type:'#ef4444',ce_type:'#06b6d4'};
+
+  const rows = selVols.map((v, i) => `
+    <tr style="background:${i%2===0?'#fff':'#f9f9fb'}">
+      <td style="text-align:center;color:#666">${i+1}</td>
+      <td style="text-align:center">
+        <span style="background:${tc[v.type]||'#888'};color:#fff;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600">${tl[v.type]||v.type||'—'}</span>
+      </td>
+      <td style="text-align:center;color:#bbb;font-size:10px">待填写</td>
+      <td style="font-weight:500">${v.school||''}</td>
+      <td style="text-align:center;color:#bbb;font-size:10px">待填写</td>
+      <td style="color:#555;font-size:11px">${v.major||''}</td>
+      <td style="color:#bbb;font-size:10px;text-align:center">待填</td>
+      <td style="color:#bbb;font-size:10px;text-align:center">待填</td>
+      <td style="color:#bbb;font-size:10px;text-align:center">待填</td>
+      <td style="color:#bbb;font-size:10px;text-align:center">待填</td>
+      <td style="color:#bbb;font-size:10px;text-align:center">待填</td>
+      <td style="color:#bbb;font-size:10px;text-align:center">待填</td>
+      <td style="text-align:center;color:${adjust==='yes'?'#16a34a':'#dc2626'};font-weight:600">${adjust==='yes'?'是':'否'}</td>
+      <td style="font-size:10px;color:#888">${v.note||''}</td>
+    </tr>`).join('');
+
+  const empty = Array.from({length: Math.max(0, 45-selVols.length)}, (_, i) =>
+    `<tr style="background:${(selVols.length+i)%2===0?'#fff':'#f9f9fb'}">
+      <td style="text-align:center;color:#ccc">${selVols.length+i+1}</td>
+      <td colspan="13" style="border-bottom:1px solid #f0f0f0"></td>
+    </tr>`
+  ).join('');
+
+  const html = `<!DOCTYPE html><html lang="zh-CN"><head>
+<meta charset="UTF-8">
+<title>广东省志愿表_${score}分_${date}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;color:#1a1a1a;padding:20px;font-size:11px}
+h1{font-size:15px;font-weight:700;text-align:center;margin-bottom:3px}
+.meta{text-align:center;color:#666;font-size:10px;margin-bottom:10px}
+.notice{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:9px 13px;font-size:10px;color:#92400e;margin-bottom:12px;line-height:1.8}
+.req{color:#dc2626;font-weight:700}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{background:#1e3a5f;color:#f0c060;padding:6px 5px;font-size:10px;font-weight:600;text-align:center;border:1px solid #2d4a70;white-space:nowrap}
+td{padding:5px 6px;border:1px solid #e5e7eb;vertical-align:middle}
+.footer{margin-top:10px;font-size:9px;color:#aaa;text-align:center}
+@page{margin:1cm;size:A4 landscape}
+@media print{body{padding:0}}
+</style></head><body>
+<h1>2026年广东省普通高校招生志愿表（本科普通类常规批·平行志愿）</h1>
+<div class="meta">分数：${score} · 排位：${rank} · 生成：${date} · 已选 ${selVols.length}/45 个志愿</div>
+<div class="notice">
+  ⚠ <strong>填报须知：</strong>
+  <span class="req">院校代码（5位）、院校专业组代码（2位）、各专业代码（6位）</span>须在
+  <strong>广东省教育考试院官方志愿填报系统</strong>中核实后填写，本表中标"待填写"的栏目请对照官方系统自行补充。<br>
+  本科普通类常规批共 <strong>45</strong> 个平行志愿，志愿顺序按投档概率从高到低排列（冲→稳→保）。
+</div>
+<table>
+<colgroup>
+  <col style="width:32px"><col style="width:44px"><col style="width:54px"><col style="width:120px">
+  <col style="width:50px"><col style="width:140px">
+  <col style="width:48px"><col style="width:48px"><col style="width:48px">
+  <col style="width:48px"><col style="width:48px"><col style="width:48px">
+  <col style="width:54px"><col>
+</colgroup>
+<thead><tr>
+  <th>志愿号</th>
+  <th>参考类型</th>
+  <th>院校代码<br><span class="req" style="font-size:9px">★待核实</span></th>
+  <th>院校名称</th>
+  <th>专业组代码<br><span class="req" style="font-size:9px">★待核实</span></th>
+  <th>建议专业方向</th>
+  <th>专业代码1<br><span class="req" style="font-size:9px">★待核实</span></th>
+  <th>专业代码2<br><span class="req" style="font-size:9px">★待核实</span></th>
+  <th>专业代码3<br><span class="req" style="font-size:9px">★待核实</span></th>
+  <th>专业代码4<br><span class="req" style="font-size:9px">★待核实</span></th>
+  <th>专业代码5<br><span class="req" style="font-size:9px">★待核实</span></th>
+  <th>专业代码6<br><span class="req" style="font-size:9px">★待核实</span></th>
+  <th>是否服从调剂</th>
+  <th>备注参考</th>
+</tr></thead>
+<tbody>${rows}${empty}</tbody>
+</table>
+<div class="footer">本方案由粤志通生成，仅供参考。实际填报请以广东省教育考试院官方系统及当年招生简章为准。</div>
+<script>window.onload=()=>{window.print()}<\/script>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  if (!w) { toast('请允许弹出窗口后重试', 'error'); return; }
+  w.document.write(html);
+  w.document.close();
+  sb.from('analytics_events').insert({
+    event_type: 'official_exported', user_id: S.user?.id, meta: { count: selVols.length }
+  }).catch(()=>{});
+}
+
+// ─── ④ 数据报错 ───────────────────────────────
+let _fbVolId = null;
+function openFeedback(id, name) {
+  _fbVolId = id;
+  document.getElementById('fb-school-name').textContent = name;
+  document.getElementById('fb-note').value = '';
+  document.getElementById('feedback-modal').classList.remove('hidden');
+}
+function closeFeedback() { document.getElementById('feedback-modal').classList.add('hidden'); }
+async function submitFeedback() {
+  const type = document.getElementById('fb-type').value;
+  const note = document.getElementById('fb-note').value.trim();
+  await sb.from('feedback').insert({
+    volunteer_id: _fbVolId, type, note,
+    user_id: S.user?.id, created_at: new Date().toISOString()
+  }).catch(()=>{});
+  closeFeedback();
+  toast('感谢反馈，我们会尽快核实 🙏', 'success');
+}
+
+
 async function generateResults() {
   setLoading(true, '从数据库加载志愿数据...');
   try {
@@ -1416,8 +1773,50 @@ function render() {
       const dc   = v._rankDiff >= 0 ? 'color:#6ee7b7' : 'color:#f87171';
       diffH = `<div style="font-size:9px;${dc};margin-top:1px">${sign}${v._rankDiff.toLocaleString()}</div>`;
     }
-    const feeH = v.fee>10000 ? `<div class="fee-v fee-high">${(v.fee/10000).toFixed(1)}万</div><div class="fee-s">中外合作</div>` : `<div class="fee-v">${v.fee.toLocaleString()}</div><div class="fee-s">元/年</div>`;
-    // 软科排名
+    // 位次盈余标签
+    let surplusH = '';
+    if (v._rankDiff != null) {
+      const abs = Math.abs(v._rankDiff);
+      if (v._rankDiff >= 0) {
+        surplusH = `<div class="rank-surplus surplus-pos">比去年线高 ${abs.toLocaleString()} 名</div>`;
+      } else {
+        surplusH = `<div class="rank-surplus surplus-neg">比去年线低 ${Math.abs(v._rankDiff).toLocaleString()} 名</div>`;
+      }
+    }
+    // 学费预警
+    let feeAlert = '';
+    if (v.fee > 30000) feeAlert = `<div class="fee-alert">⚠ 高费用</div>`;
+    const feeH = v.fee > 10000
+      ? `<div class="fee-v fee-high">${(v.fee/10000).toFixed(1)}万</div><div class="fee-s">中外合作</div>${feeAlert}`
+      : `<div class="fee-v">${v.fee?.toLocaleString()??'—'}</div><div class="fee-s">元/年</div>${feeAlert}`;
+    // 收藏 & 选择
+    const isFav = S.favorites.has(v.id);
+    const isSel = S.selected.has(v.id);
+    const selOrder = isSel ? ([...S.selected].indexOf(v.id)+1) : '';
+    html += `<tr class="${isSel?'row-selected':''}" onclick="S.selMode&&rowClick(${v.id})" style="${S.selMode?'cursor:pointer':''}">
+      <td data-lbl="" style="text-align:center">
+        ${S.selMode ? `<div class="row-cb ${isSel?'checked':''}" onclick="event.stopPropagation();rowClick(${v.id})">${isSel?selOrder:''}</div>` : ''}
+      </td>
+      <td data-lbl="" style="text-align:center">
+        <button class="fav-btn ${isFav?'active':''}" onclick="event.stopPropagation();toggleFav(${v.id})" title="${isFav?'取消收藏':'加入收藏'}">★</button>
+        <button class="report-btn" onclick="event.stopPropagation();openFeedback(${v.id},'${(v.school??'').replace(/'/g,"\\'")} ${(v.major??'').replace(/'/g,"\\'")}')">⚑</button>
+      </td>
+      <td data-lbl="序号" style="text-align:center;font-size:11px;color:var(--text3);font-weight:600">${v.no}</td>
+      <td data-lbl="类型"><div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:3px">${tb[v.type]}${outB}</div><div style="display:flex;flex-wrap:wrap;gap:3px">${poorB}${warnB}</div></td>
+      <td data-lbl="院校"><div class="sname">${v.school}</div><div class="sloc">📍 ${v.city}</div></td>
+      <td data-lbl="专业方向"><div class="major-t">${v.major}</div>${gwH}</td>
+      <td class="rank-cell" data-lbl="2023位次">${fR(v.rank_2023)}</td>
+      <td class="rank-cell" data-lbl="2024位次">${fR(v.rank_2024)}${surplusH}</td>
+      <td class="rank-cell" data-lbl="2025位次">${fR(v.rank_2025)}${trd}</td>
+      <td data-lbl="软科排名" style="text-align:center">${rkH}</td>
+      <td data-lbl="学费/年">${feeH}</td>
+      <td data-lbl="就业"><div class="stars" style="color:${ec[v.emp_score]}">${'★'.repeat(v.emp_score)+'☆'.repeat(5-v.emp_score)}</div><div class="elbl" style="color:${ec[v.emp_score]}">${el[v.emp_score]}</div></td>
+      <td data-lbl="保研率" style="text-align:center">${pgH}</td>
+      <td data-lbl="城市">${tierH}</td>
+      <td data-lbl="转专业">${tpH}</td>
+      <td data-lbl="双一流">${yxH}</td>
+      <td data-lbl="备注">${ecityH}<div class="${v.is_poor_prospect?'note-t note-poor':'note-t'}" style="max-width:180px">${v.note||''}</div></td>
+    </tr>`;
     const catLabel={'medical':'医药类','finance':'财经类','lang':'语言类','normal':'师范类','agri':'农业类','law':'政法类','tcm':'中医药类'};
     let rkH = '<span class="rna">—</span>';
     if (v.ruanke_rank) {
@@ -1445,23 +1844,6 @@ function render() {
     }
     // 就业城市 + 备注
     const ecityH = v.main_employ_city ? `<div style="font-size:11px;color:#6ee7b7;margin-bottom:3px">📍 ${v.main_employ_city}</div>` : '';
-    html += `<tr>
-      <td style="text-align:center;font-size:11px;color:var(--text3);font-weight:600">${v.no}</td>
-      <td><div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:3px">${tb[v.type]}${outB}</div><div style="display:flex;flex-wrap:wrap;gap:3px">${poorB}${warnB}</div></td>
-      <td><div class="sname">${v.school}</div><div class="sloc">📍 ${v.city}</div></td>
-      <td><div class="major-t">${v.major}</div>${gwH}</td>
-      <td class="rank-cell">${fR(v.rank_2023)}</td>
-      <td class="rank-cell">${fR(v.rank_2024)}${diffH}</td>
-      <td class="rank-cell">${fR(v.rank_2025)}${trd}</td>
-      <td style="text-align:center">${rkH}</td>
-      <td>${feeH}</td>
-      <td><div class="stars" style="color:${ec[v.emp_score]}">${'★'.repeat(v.emp_score)+'☆'.repeat(5-v.emp_score)}</div><div class="elbl" style="color:${ec[v.emp_score]}">${el[v.emp_score]}</div></td>
-      <td style="text-align:center">${pgH}</td>
-      <td>${tierH}</td>
-      <td>${tpH}</td>
-      <td>${yxH}</td>
-      <td>${ecityH}<div class="${v.is_poor_prospect?'note-t note-poor':'note-t'}" style="max-width:180px">${v.note||''}</div></td>
-    </tr>`;
   });
   tbody.innerHTML = html;
 }
@@ -1490,6 +1872,68 @@ function dlCSV() {
   a.click();
   sb.from('analytics_events').insert({ event_type:'plan_downloaded', plan_id: S.currentPlanId, user_id: S.user?.id, meta:{format:'csv'} });
 }
+function dlPDF() {
+  const score = S.wizard.score || '—';
+  const rank  = S.wizard.rank  ? parseInt(S.wizard.rank).toLocaleString() : '—';
+  const date  = new Date().toLocaleDateString('zh-CN');
+  const rows  = S.filtered.map((v, i) => {
+    const typeLabel = {c:'冲',w:'稳',b:'保',cx_type:'超难',ce_type:'超易'}[v.type] ?? v.type ?? '—';
+    const typeBg    = {c:'#f97316',w:'#22c55e',b:'#a78bfa',cx_type:'#ef4444',ce_type:'#06b6d4'}[v.type] ?? '#888';
+    const diff = v._rankDiff != null ? (v._rankDiff >= 0 ? `+${v._rankDiff.toLocaleString()}` : v._rankDiff.toLocaleString()) : '';
+    const diffColor = v._rankDiff >= 0 ? '#22c55e' : '#ef4444';
+    return `<tr style="background:${i%2===0?'#fff':'#f9f9fb'}">
+      <td style="text-align:center;color:#888">${i+1}</td>
+      <td style="text-align:center"><span style="background:${typeBg};color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">${typeLabel}</span></td>
+      <td style="font-weight:500">${v.school??''}</td>
+      <td style="color:#555;font-size:12px">${v.major??''}</td>
+      <td style="text-align:center;font-family:monospace">${v.ref_rank??v.rank_2024??'—'}</td>
+      <td style="text-align:center;font-family:monospace;color:${diffColor}">${diff}</td>
+      <td style="text-align:center">${v.province??''}</td>
+      <td style="color:#555;font-size:11px">${v.note??''}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="zh-CN"><head>
+<meta charset="UTF-8">
+<title>志愿方案_${score}分_${date}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;color:#1a1a1a;padding:24px;font-size:13px}
+  h1{font-size:18px;font-weight:700;margin-bottom:4px}
+  .meta{color:#666;font-size:12px;margin-bottom:16px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#0d1b2a;color:#c8a96e;padding:8px 10px;text-align:left;font-weight:600}
+  td{padding:7px 10px;border-bottom:1px solid #eee;vertical-align:top}
+  .footer{margin-top:16px;font-size:11px;color:#aaa;text-align:center}
+  @media print{body{padding:0}@page{margin:1.5cm;size:A4 landscape}}
+</style></head><body>
+<h1>高考志愿方案</h1>
+<div class="meta">分数：${score}分 · 位次：${rank} · 生成日期：${date} · 共 ${S.filtered.length} 个志愿</div>
+<table>
+  <thead><tr>
+    <th style="width:40px">序号</th>
+    <th style="width:50px">类型</th>
+    <th style="width:130px">院校</th>
+    <th style="width:160px">专业组</th>
+    <th style="width:80px">参考位次</th>
+    <th style="width:70px">与你差值</th>
+    <th style="width:60px">省份</th>
+    <th>备注</th>
+  </tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<div class="footer">本方案数据基于历年公开投档信息，仅供参考。实际填报请以广东省教育考试院官方数据为准。</div>
+<script>window.onload=()=>{window.print()}<\/script>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  if (!w) { toast('请允许弹出窗口后重试', 'error'); return; }
+  w.document.write(html);
+  w.document.close();
+  sb.from('analytics_events').insert({ event_type:'plan_downloaded', plan_id: S.currentPlanId, user_id: S.user?.id, meta:{format:'pdf'} }).catch(()=>{});
+}
+
+  const bgMap={c:'#dbeafe',w:'#dcfce7',b:'#fef9c3',cx_type:'#fecaca',ce_type:'#e9d5ff'};
 function dlExcel() {
   const bgMap={c:'#dbeafe',w:'#dcfce7',b:'#fef9c3',cx_type:'#fecaca',ce_type:'#e9d5ff'};
   const rowsH = getRows().map((r, i) => {

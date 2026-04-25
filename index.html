@@ -426,9 +426,10 @@ td{padding:9px 11px;vertical-align:top}
     </ol>
   </div>
   <p class="land-auth">
-    已有方案？<a onclick="openAuth('login')">登录查看</a>
+    已有方案？<a onclick="openAuth('login')" id="login-link">登录查看</a>
     &nbsp;·&nbsp;
     <a onclick="showPlans()" id="my-plans-link" class="hidden">我的方案</a>
+    <a onclick="openMember()" id="member-link" class="hidden" style="color:var(--gold)">✦ 账号/会员</a>
     <span id="user-greeting" class="hidden" style="color:var(--gold)"></span>
     &nbsp;<a onclick="doSignOut()" id="signout-link" class="hidden">退出</a>
   </p>
@@ -879,6 +880,9 @@ function updateAuthUI() {
   const loggedIn = !!S.user;
   document.getElementById('my-plans-link').classList.toggle('hidden', !loggedIn);
   document.getElementById('signout-link').classList.toggle('hidden', !loggedIn);
+  document.getElementById('login-link').classList.toggle('hidden', loggedIn);
+  const memberLink = document.getElementById('member-link');
+  if (memberLink) memberLink.classList.toggle('hidden', !loggedIn);
   document.getElementById('user-greeting').classList.toggle('hidden', !loggedIn);
   if (loggedIn) document.getElementById('user-greeting').textContent = S.user.email.split('@')[0];
   const resBtn = document.getElementById('res-user-btn');
@@ -887,7 +891,10 @@ function updateAuthUI() {
     resBtn.textContent = loggedIn ? `👤 ${S.user.email.split('@')[0]}` : '登录保存';
     resBtn.onclick = loggedIn ? openMember : () => openAuth('login');
   }
-  if (memBtn) memBtn.classList.toggle('hidden', !loggedIn);
+  if (memBtn) {
+    if (loggedIn) memBtn.classList.remove('hidden');
+    else memBtn.classList.add('hidden');
+  }
   const saveBtn = document.getElementById('save-btn');
   if (saveBtn) saveBtn.textContent = loggedIn ? '💾 保存方案' : '💾 登录后保存';
   // 更新 my-plans 账号卡

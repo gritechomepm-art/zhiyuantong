@@ -1015,8 +1015,15 @@ function startWizard() { showView('wizard'); showStep(1); }
 async function generateResults() {
   setLoading(true, '从数据库加载志愿数据...');
   try {
-    const { data, error } = await sb.from('volunteers').select('*').eq('is_active', true).order('no');
-    if (error) throw error;
+    // 先不带任何过滤条件，验证表是否可访问
+    let query = sb.from('volunteers').select('*');
+    // is_active / no 字段若不存在会报 400，先尝试带条件
+    const { data, error } = await query;
+    if (error) {
+      // 把 Supabase 错误全部展示出来
+      const detail = `[${error.code}] ${error.message}${error.hint ? ' · ' + error.hint : ''}${error.details ? ' · ' + error.details : ''}`;
+      throw new Error(detail);
+    }
     S.volunteers = enhanceVolunteers(data, S.wizard.rank);
     S.currentPlanId = null;
     S.currentShareToken = null;

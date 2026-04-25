@@ -875,7 +875,7 @@ tr:hover .report-btn{opacity:1}
 // ════════════════════════════════════════════
 const SUPABASE_URL  = 'https://jpeswkqvuimfbsdcxpua.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_oufQDZINA2a_6U7fADUS6g_t4FmjG20';
-const SITE_URL      = 'https://zhiyuantong-fly.vercel.app';
+const SITE_URL      = 'https://zhiyuantong-fly.vercel.app';;
 // ════════════════════════════════════════════
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1789,6 +1789,34 @@ function render() {
     const feeH = v.fee > 10000
       ? `<div class="fee-v fee-high">${(v.fee/10000).toFixed(1)}万</div><div class="fee-s">中外合作</div>${feeAlert}`
       : `<div class="fee-v">${v.fee?.toLocaleString()??'—'}</div><div class="fee-s">元/年</div>${feeAlert}`;
+    // 软科排名
+    const catLabel={'medical':'医药类','finance':'财经类','lang':'语言类','normal':'师范类','agri':'农业类','law':'政法类','tcm':'中医药类'};
+    let rkH = '<span class="rna">—</span>';
+    if (v.ruanke_rank) {
+      rkH = `<div style="font-size:12px;font-weight:500;color:var(--gold2)">第${v.ruanke_rank}名</div>`;
+    } else if (v.ruanke_cat && v.ruanke_cat_rank) {
+      rkH = `<div style="font-size:11px;font-weight:500;color:#c4b5fd">${catLabel[v.ruanke_cat]||v.ruanke_cat}</div><div style="font-size:11px;color:#c4b5fd">第${v.ruanke_cat_rank}名</div>`;
+    } else if (v.ruanke_cat) {
+      rkH = `<div style="font-size:11px;color:#c4b5fd">${catLabel[v.ruanke_cat]||v.ruanke_cat}</div><div style="font-size:10px;color:var(--text3)">上榜</div>`;
+    }
+    // 城市等级
+    const tierColor={'一线':'#fbbf24','新一线':'#93c5fd','二线':'#c4b5fd'};
+    const tc = tierColor[v.city_tier]||'var(--text3)';
+    const tierH = v.city_tier ? `<div style="font-size:11px;font-weight:500;color:${tc}">${v.city_tier}</div><div style="font-size:10px;color:var(--text3)">${v.city_name||v.city}</div>` : '<span class="rna">—</span>';
+    // 转专业
+    const tpIcon={'自由':'🔓','有条件':'📋','受限':'🔒'};
+    const tpC={'自由':'#6ee7b7','有条件':'#fbbf24','受限':'#f87171'};
+    const tpH = v.transfer_policy ? `<div style="font-size:11px;color:${tpC[v.transfer_policy]||'var(--text2)'}">${tpIcon[v.transfer_policy]||''} ${v.transfer_policy}</div>` : '<span class="rna">—</span>';
+    // 保研率
+    const pgH = v.postgrad_rate!=null ? `<div style="font-size:13px;font-weight:500;color:${v.postgrad_rate>=12?'#6ee7b7':v.postgrad_rate>=8?'#fbbf24':v.postgrad_rate>=5?'var(--text2)':'var(--text3)'}">${v.postgrad_rate}%</div>` : '<span class="rna">—</span>';
+    // 双一流学科
+    let yxH = '<span class="rna" style="font-size:10px">无</span>';
+    if (v.yixiu_subject && !v.yixiu_subject.includes('无双一流')) {
+      const subs = v.yixiu_subject.split('/');
+      yxH = subs.slice(0,2).map(s=>`<div style="font-size:10px;color:#d2a8ff;line-height:1.5">${s.trim()}</div>`).join('') + (subs.length>2?`<div style="font-size:9px;color:var(--text3)">+${subs.length-2}个</div>`:'');
+    }
+    // 就业城市 + 备注
+    const ecityH = v.main_employ_city ? `<div style="font-size:11px;color:#6ee7b7;margin-bottom:3px">📍 ${v.main_employ_city}</div>` : '';
     // 收藏 & 选择
     const isFav = S.favorites.has(v.id);
     const isSel = S.selected.has(v.id);
@@ -1817,33 +1845,6 @@ function render() {
       <td data-lbl="双一流">${yxH}</td>
       <td data-lbl="备注">${ecityH}<div class="${v.is_poor_prospect?'note-t note-poor':'note-t'}" style="max-width:180px">${v.note||''}</div></td>
     </tr>`;
-    const catLabel={'medical':'医药类','finance':'财经类','lang':'语言类','normal':'师范类','agri':'农业类','law':'政法类','tcm':'中医药类'};
-    let rkH = '<span class="rna">—</span>';
-    if (v.ruanke_rank) {
-      rkH = `<div style="font-size:12px;font-weight:500;color:var(--gold2)">第${v.ruanke_rank}名</div>`;
-    } else if (v.ruanke_cat && v.ruanke_cat_rank) {
-      rkH = `<div style="font-size:11px;font-weight:500;color:#c4b5fd">${catLabel[v.ruanke_cat]||v.ruanke_cat}</div><div style="font-size:11px;color:#c4b5fd">第${v.ruanke_cat_rank}名</div>`;
-    } else if (v.ruanke_cat) {
-      rkH = `<div style="font-size:11px;color:#c4b5fd">${catLabel[v.ruanke_cat]||v.ruanke_cat}</div><div style="font-size:10px;color:var(--text3)">上榜</div>`;
-    }
-    // 城市等级
-    const tierColor={'一线':'#fbbf24','新一线':'#93c5fd','二线':'#c4b5fd'};
-    const tc = tierColor[v.city_tier]||'var(--text3)';
-    const tierH = v.city_tier ? `<div style="font-size:11px;font-weight:500;color:${tc}">${v.city_tier}</div><div style="font-size:10px;color:var(--text3)">${v.city_name||v.city}</div>` : '<span class="rna">—</span>';
-    // 转专业
-    const tpIcon={'自由':'🔓','有条件':'📋','受限':'🔒'};
-    const tpC={'自由':'#6ee7b7','有条件':'#fbbf24','受限':'#f87171'};
-    const tpH = v.transfer_policy ? `<div style="font-size:11px;color:${tpC[v.transfer_policy]||'var(--text2)'}">${tpIcon[v.transfer_policy]||''} ${v.transfer_policy}</div>` : '<span class="rna">—</span>';
-    // 保研率
-    const pgH = v.postgrad_rate!=null ? `<div style="font-size:13px;font-weight:500;color:${v.postgrad_rate>=12?'#6ee7b7':v.postgrad_rate>=8?'#fbbf24':v.postgrad_rate>=5?'var(--text2)':'var(--text3)'}">${v.postgrad_rate}%</div>` : '<span class="rna">—</span>';
-    // 双一流学科
-    let yxH = '<span class="rna" style="font-size:10px">无</span>';
-    if (v.yixiu_subject && !v.yixiu_subject.includes('无双一流')) {
-      const subs = v.yixiu_subject.split('/');
-      yxH = subs.slice(0,2).map(s=>`<div style="font-size:10px;color:#d2a8ff;line-height:1.5">${s.trim()}</div>`).join('') + (subs.length>2?`<div style="font-size:9px;color:var(--text3)">+${subs.length-2}个</div>`:'');
-    }
-    // 就业城市 + 备注
-    const ecityH = v.main_employ_city ? `<div style="font-size:11px;color:#6ee7b7;margin-bottom:3px">📍 ${v.main_employ_city}</div>` : '';
   });
   tbody.innerHTML = html;
 }

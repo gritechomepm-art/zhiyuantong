@@ -457,16 +457,16 @@ td{padding:9px 11px;vertical-align:top}
     </div>
     <div class="form-grid">
       <div class="field"><label>所在省份</label><select id="w-prov"><option value="广东" selected>广东省</option><option value="其他">其他省份（仅供参考）</option></select></div>
-      <div class="field"><label>选考科目类别</label><select id="w-track"><option value="phy" selected>物理类（首选物理）</option><option value="his">历史类（首选历史）</option></select></div>
+      <div class="field"><label>选考科目类别</label><select id="w-track" onchange="onTrackChange(this.value)"><option value="phy" selected>物理类（首选物理）</option><option value="his">历史类（首选历史）</option></select></div>
     </div>
     <div class="field"><label>选科组合</label>
       <div class="check-grid" style="grid-template-columns:repeat(3,1fr)">
-        <label class="check-item"><input type="checkbox" id="sc-phy" checked disabled><span class="check-box"><span class="ck"></span>物理（必选）</span></label>
+        <label class="check-item"><input type="checkbox" id="sc-phy" checked disabled><span class="check-box"><span class="ck"></span><span id="sc-phy-label">物理（必选）</span></span></label>
         <label class="check-item"><input type="checkbox" id="sc-che" checked><span class="check-box"><span class="ck"></span>化学</span></label>
         <label class="check-item"><input type="checkbox" id="sc-geo"><span class="check-box"><span class="ck"></span>地理</span></label>
         <label class="check-item"><input type="checkbox" id="sc-bio"><span class="check-box"><span class="ck"></span>生物</span></label>
         <label class="check-item"><input type="checkbox" id="sc-pol"><span class="check-box"><span class="ck"></span>政治</span></label>
-        <label class="check-item"><input type="checkbox" id="sc-his"><span class="check-box"><span class="ck"></span>历史</span></label>
+        <label class="check-item" id="sc-his-wrap"><input type="checkbox" id="sc-his"><span class="check-box"><span class="ck"></span><span id="sc-his-label">历史</span></span></label>
       </div>
     </div>
   </div>
@@ -498,7 +498,11 @@ td{padding:9px 11px;vertical-align:top}
         <label class="check-item"><input type="checkbox" class="major-pref" value="med"><span class="check-box"><span class="ck"></span>🏥 临床医学</span></label>
         <label class="check-item"><input type="checkbox" class="major-pref" value="fin"><span class="check-box"><span class="ck"></span>💰 金融/经济</span></label>
         <label class="check-item"><input type="checkbox" class="major-pref" value="auto"><span class="check-box"><span class="ck"></span>⚡ 自动化/新能源</span></label>
-        <label class="check-item"><input type="checkbox" class="major-pref" value="other"><span class="check-box"><span class="ck"></span>🌐 其他/不限</span></label>
+        <label class="check-item"><input type="checkbox" class="major-pref" value="other" id="pref-other"><span class="check-box"><span class="ck"></span>🌐 不限</span></label>
+        <label class="check-item"><input type="checkbox" class="major-pref" value="custom" id="pref-custom" onchange="toggleCustomMajor(this.checked)"><span class="check-box"><span class="ck"></span>✏️ 自定义</span></label>
+      </div>
+      <div id="custom-major-wrap" style="display:none;margin-top:8px">
+        <input type="text" id="custom-major-input" class="text-input" placeholder="输入专业关键词，多个用逗号分隔，如：建筑,土木,城规" style="width:100%;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
       </div>
     </div>
     <div class="field"><label>可接受的最低就业评级</label>
@@ -971,6 +975,9 @@ function goStep(from, to) {
       provPref: document.querySelector('input[name="prov-pref"]:checked').value,
       priority: document.querySelector('input[name="priority"]:checked').value,
       majorPrefs: [...document.querySelectorAll('.major-pref:checked')].map(c => c.value),
+      customMajor: (document.getElementById('pref-custom')?.checked
+        ? (document.getElementById('custom-major-input')?.value || '').trim()
+        : ''),
       empMin: parseInt(document.getElementById('emp-min').value),
       chemAtt: S.segVal
     });
@@ -1000,6 +1007,37 @@ function buildReview() {
   const rangeLbl = document.getElementById('strat-range-label');
   if (rangeLbl) rangeLbl.innerHTML =
     `冲 <b style="color:var(--gold)">${rr.fChong}</b> · 稳 <b style="color:var(--gold)">${rr.fWen}</b> · 保 <b style="color:var(--gold)">${rr.fBao}</b>`;
+}
+function toggleCustomMajor(checked) {
+  document.getElementById('custom-major-wrap').style.display = checked ? '' : 'none';
+  if (checked) document.getElementById('custom-major-input').focus();
+}
+function onTrackChange(track) {
+  const phyEl  = document.getElementById('sc-phy');
+  const hisEl  = document.getElementById('sc-his');
+  const phyLbl = document.getElementById('sc-phy-label');
+  const hisLbl = document.getElementById('sc-his-label');
+  const cheEl  = document.getElementById('sc-che');
+  if (track === 'his') {
+    // 历史类：历史必选，物理变可选（取消勾选）
+    hisEl.checked  = true;
+    hisEl.disabled = true;
+    hisLbl.textContent = '历史（必选）';
+    phyEl.checked  = false;
+    phyEl.disabled = false;
+    phyLbl.textContent = '物理';
+    // 历史类通常不选化学，取消默认勾选
+    cheEl.checked = false;
+  } else {
+    // 物理类：物理必选，历史变可选
+    phyEl.checked  = true;
+    phyEl.disabled = true;
+    phyLbl.textContent = '物理（必选）';
+    hisEl.checked  = false;
+    hisEl.disabled = false;
+    hisLbl.textContent = '历史';
+    cheEl.checked = true;
+  }
 }
 function selectStrategy(key) {
   S.wizard.strategy = key;

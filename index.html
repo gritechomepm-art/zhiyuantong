@@ -279,7 +279,20 @@ td{padding:9px 11px;vertical-align:top}
 .compare-panel.show{transform:translateY(0)}
 .compare-head{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--navy2);z-index:1}
 
-/* ── 位次盈余 ── */
+/* ── 历年排位对比 ── */
+.rank-cmp{display:flex;flex-direction:column;gap:3px;min-width:110px}
+.rank-cmp-row{display:flex;align-items:center;gap:5px;font-size:10px}
+.rank-cmp-year{color:var(--text3);width:32px;flex-shrink:0;font-family:'DM Mono',monospace}
+.rank-cmp-bar-wrap{flex:1;height:5px;background:var(--navy2);border-radius:3px;overflow:hidden;min-width:40px}
+.rank-cmp-bar{height:100%;border-radius:3px;transition:width .3s}
+.rank-cmp-val{font-family:'DM Mono',monospace;font-size:10px;width:52px;text-align:right;flex-shrink:0}
+.rank-cmp-diff{font-size:9px;padding:1px 4px;border-radius:3px;font-weight:600;white-space:nowrap}
+.rank-cmp-diff.pos{background:rgba(34,197,94,.15);color:#6ee7b7}
+.rank-cmp-diff.neg{background:rgba(239,68,68,.15);color:#f87171}
+.rank-cmp-diff.neu{background:rgba(255,255,255,.06);color:var(--text3)}
+.rank-cmp-user{border-top:1px dashed var(--border2);margin-top:2px;padding-top:3px}
+.rank-cmp-user-line{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--gold)}
+.rank-cmp-trend{font-size:9px;margin-top:2px;color:var(--text3)}
 .rank-surplus{font-size:10px;padding:1px 5px;border-radius:3px;margin-top:2px;font-weight:500;display:inline-block}
 .surplus-pos{background:rgba(34,197,94,.15);color:#6ee7b7}
 .surplus-neg{background:rgba(239,68,68,.15);color:#f87171}
@@ -499,8 +512,14 @@ tr:hover .report-btn{opacity:1}
   <div class="wiz-head"><h2>考生基本信息</h2><p>填写真实高考数据，系统将据此推算冲稳保梯度</p></div>
   <div class="wiz-body">
     <div class="form-grid">
-      <div class="field"><label>高考总分 *</label><input type="number" id="w-score" placeholder="如 600" oninput="saveWizCache()" min="400" max="750"><div class="hint">满分 750（不含加分）</div></div>
-      <div class="field"><label>省内排位 *</label><input type="number" id="w-rank" placeholder="如 20000" min="1" oninput="saveWizCache()"><div class="hint">物理类或历史类均适用，以成绩公布后官方位次为准</div></div>
+      <div class="field"><label>高考总分 *</label><input type="number" id="w-score" placeholder="如 600" oninput="saveWizCache();updateRankHint()" min="400" max="750"><div class="hint">满分 750（不含加分）</div></div>
+      <div class="field"><label>省内排位 *</label><input type="number" id="w-rank" placeholder="如 20000" min="1" oninput="saveWizCache();updateRankHint()"><div class="hint" id="rank-hint">物理类或历史类均适用，以成绩公布后官方位次为准</div></div>
+      <!-- 历年参考范围卡片 -->
+      <div id="rank-ref-card" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12px;margin-top:-8px;margin-bottom:4px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:500">📊 历年参考排位（物理类，广东）</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="rank-ref-rows"></div>
+        <div style="margin-top:8px;font-size:10px;color:var(--text3)">⚠ 每年分数线随当年考生整体水平浮动，排位比分数更稳定</div>
+      </div>
     </div>
     <div class="form-grid">
       <div class="field"><label>所在省份</label><select id="w-prov"><option value="广东" selected>广东省</option><option value="其他">其他省份（仅供参考）</option></select></div>
@@ -724,9 +743,7 @@ tr:hover .report-btn{opacity:1}
             <th style="width:90px">类型</th>
             <th style="width:130px" onclick="srt('school')">院校 ↕</th>
             <th style="width:170px">建议专业方向</th>
-            <th style="width:74px;text-align:right" onclick="srt('r23')">2023位次 ↕</th>
-            <th style="width:74px;text-align:right" onclick="srt('r24')">2024位次 ↕</th>
-            <th style="width:74px;text-align:right" onclick="srt('r25')">2025位次 ↕</th>
+            <th style="width:160px" onclick="srt('r24')">历年排位对比 ↕</th>
             <th style="width:68px" onclick="srt('ruanke')">软科排名 ↕</th>
             <th style="width:70px" onclick="srt('fee')">学费/年 ↕</th>
             <th style="width:62px" onclick="srt('emp')">就业 ↕</th>
@@ -875,7 +892,7 @@ tr:hover .report-btn{opacity:1}
 // ════════════════════════════════════════════
 const SUPABASE_URL  = 'https://jpeswkqvuimfbsdcxpua.supabase.co';
 const SUPABASE_KEY  = 'sb_publishable_oufQDZINA2a_6U7fADUS6g_t4FmjG20';
-const SITE_URL      = 'https://zhiyuantong-fly.vercel.app';;
+const SITE_URL      = 'https://zhiyuantong-fly.vercel.app';
 // ════════════════════════════════════════════
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1427,6 +1444,35 @@ async function generateResults() {
       throw new Error(detail);
     }
     S.volunteers = enhanceVolunteers(data, S.wizard.rank);
+
+    // 检查数据库覆盖率：超难占比过高时提示用户
+    const total = S.volunteers.length;
+    if (total > 0) {
+      const hardCount = S.volunteers.filter(v => v.type === 'cx_type').length;
+      const hardRatio = hardCount / total;
+      if (hardRatio > 0.6) {
+        const userRank = parseInt(S.wizard.rank).toLocaleString();
+        const minRef = Math.min(...S.volunteers.map(v => v.ref_rank || v.rank_2024 || 999999).filter(n => n < 999999));
+        toast(
+          `⚠ 数据库目前主要收录位次 ${minRef.toLocaleString()} 以内的院校（985/211为主），` +
+          `您的排位 ${userRank} 超出覆盖范围，建议联系我们补充适合您的院校数据。`,
+          'error'
+        );
+        // 同时在结果页顶部插入持久提示
+        const existing = document.getElementById('coverage-warn');
+        if (!existing) {
+          const warn = document.createElement('div');
+          warn.id = 'coverage-warn';
+          warn.style.cssText = 'background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.4);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#fde68a;line-height:1.7';
+          warn.innerHTML = `<strong>⚠ 数据覆盖提示</strong><br>
+            当前数据库以 <strong>985/211 院校</strong>为主（录取位次约 ${minRef.toLocaleString()} 以内），
+            对于省内排位 <strong>${userRank}</strong> 的考生，绝大多数学校超出冲区间，显示为「超难」属正常现象。<br>
+            <span style="color:rgba(253,230,138,.7)">建议：筛选时选「保」类型，或等待数据库补充适合您排位的院校（普通本科、省内二本等）。</span>`;
+          const hero = document.querySelector('.res-hero');
+          if (hero) hero.insertAdjacentElement('afterend', warn);
+        }
+      }
+    }
     S.currentPlanId = null;
     S.currentShareToken = null;
     document.getElementById('share-btn').style.display = 'none';
@@ -1766,23 +1812,56 @@ function render() {
     const gwH = v.group_warn ? `<div class="gw">⚠ ${v.group_warn}</div>` : '';
     function fR(n) { return n==null ? '<span class="rna">首年</span>' : `<span class="rv">${parseInt(n).toLocaleString()}</span>`; }
     let trd=''; if(v.rank_2024&&v.rank_2025){const d=v.rank_2025-v.rank_2024;if(Math.abs(d)>=1000) trd=`<div class="rtrd ${d>0?'rup':'rdn'}">${d>0?'▲竞争↑':'▼竞争↓'} ${Math.round(Math.abs(d)/1000)}k</div>`;}
-    // 与用户排位差值（ref_rank 优先）
-    let diffH = '';
-    if (v._rankDiff != null) {
-      const sign = v._rankDiff >= 0 ? '+' : '';
-      const dc   = v._rankDiff >= 0 ? 'color:#6ee7b7' : 'color:#f87171';
-      diffH = `<div style="font-size:9px;${dc};margin-top:1px">${sign}${v._rankDiff.toLocaleString()}</div>`;
+    // ── 历年排位对比组件 ──
+    const ur = parseInt(S.wizard.rank) || 0;
+    // 取所有有效排位中最大值作为 bar 100% 基准（最差排位）
+    const ranks3 = [v.rank_2023, v.rank_2024, v.ref_rank].filter(Boolean).map(Number);
+    const rankMax = ranks3.length ? Math.max(...ranks3, ur * 1.3) : ur * 2;
+    function mkRankRow(year, rankVal, isRef) {
+      if (!rankVal) return `<div class="rank-cmp-row"><span class="rank-cmp-year">${year}</span><span style="color:var(--text3);font-size:10px">首年/无数据</span></div>`;
+      const rk   = parseInt(rankVal);
+      const pct  = Math.min(100, Math.round(rk / rankMax * 100));
+      // 颜色：排位越小越好（越蓝），越大越红
+      const ratio = ur > 0 ? rk / ur : 1;
+      const barColor = ratio < 0.80 ? '#ef4444'       // 超难
+                     : ratio < 0.95 ? '#f97316'       // 冲
+                     : ratio < 1.10 ? '#22c55e'       // 稳
+                     : ratio < 1.80 ? '#a78bfa'       // 保
+                     :                '#06b6d4';       // 超易
+      const diff  = ur > 0 ? ur - rk : null;
+      const diffH = diff == null ? '' :
+        `<span class="rank-cmp-diff ${diff>0?'pos':diff<0?'neg':'neu'}">${diff>0?'+':''}${diff.toLocaleString()}</span>`;
+      const badge = isRef ? '★' : '';
+      return `<div class="rank-cmp-row">
+        <span class="rank-cmp-year">${year}${badge}</span>
+        <div class="rank-cmp-bar-wrap"><div class="rank-cmp-bar" style="width:${pct}%;background:${barColor}"></div></div>
+        <span class="rank-cmp-val" style="color:${barColor}">${rk.toLocaleString()}</span>
+        ${diffH}
+      </div>`;
     }
-    // 位次盈余标签
-    let surplusH = '';
-    if (v._rankDiff != null) {
-      const abs = Math.abs(v._rankDiff);
-      if (v._rankDiff >= 0) {
-        surplusH = `<div class="rank-surplus surplus-pos">比去年线高 ${abs.toLocaleString()} 名</div>`;
-      } else {
-        surplusH = `<div class="rank-surplus surplus-neg">比去年线低 ${Math.abs(v._rankDiff).toLocaleString()} 名</div>`;
+    // 趋势文字
+    let trendText = '';
+    if (v.rank_2023 && v.ref_rank) {
+      const delta = parseInt(v.ref_rank) - parseInt(v.rank_2023);
+      if (Math.abs(delta) >= 500) {
+        trendText = delta < 0
+          ? `<div class="rank-cmp-trend">▲ 近2年竞争加剧 ${Math.abs(delta).toLocaleString()}名</div>`
+          : `<div class="rank-cmp-trend">▼ 近2年竞争减弱 ${delta.toLocaleString()}名</div>`;
       }
     }
+    // 用户排位参考线
+    const userLineH = ur > 0 ? `<div class="rank-cmp-user">
+      <div class="rank-cmp-user-line">
+        <div class="rank-cmp-bar-wrap"><div class="rank-cmp-bar" style="width:${Math.min(100,Math.round(ur/rankMax*100))}%;background:var(--gold);opacity:.7"></div></div>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gold)">你 ${ur.toLocaleString()}</span>
+      </div>
+    </div>` : '';
+    const rankCmpH = `<div class="rank-cmp">
+      ${mkRankRow('2023', v.rank_2023, false)}
+      ${mkRankRow('2024', v.ref_rank || v.rank_2024, true)}
+      ${trendText}
+      ${userLineH}
+    </div>`;
     // 学费预警
     let feeAlert = '';
     if (v.fee > 30000) feeAlert = `<div class="fee-alert">⚠ 高费用</div>`;
@@ -1833,9 +1912,7 @@ function render() {
       <td data-lbl="类型"><div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:3px">${tb[v.type]}${outB}</div><div style="display:flex;flex-wrap:wrap;gap:3px">${poorB}${warnB}</div></td>
       <td data-lbl="院校"><div class="sname">${v.school}</div><div class="sloc">📍 ${v.city}</div></td>
       <td data-lbl="专业方向"><div class="major-t">${v.major}</div>${gwH}</td>
-      <td class="rank-cell" data-lbl="2023位次">${fR(v.rank_2023)}</td>
-      <td class="rank-cell" data-lbl="2024位次">${fR(v.rank_2024)}${surplusH}</td>
-      <td class="rank-cell" data-lbl="2025位次">${fR(v.rank_2025)}${trd}</td>
+      <td data-lbl="历年排位">${rankCmpH}</td>
       <td data-lbl="软科排名" style="text-align:center">${rkH}</td>
       <td data-lbl="学费/年">${feeH}</td>
       <td data-lbl="就业"><div class="stars" style="color:${ec[v.emp_score]}">${'★'.repeat(v.emp_score)+'☆'.repeat(5-v.emp_score)}</div><div class="elbl" style="color:${ec[v.emp_score]}">${el[v.emp_score]}</div></td>
@@ -1851,10 +1928,77 @@ function render() {
 
 // ─── Download ─────────────────────────────────
 const HDR = ['序号','类型','院校','城市','省份','建议专业方向','2023位次','2024位次','2025位次','软科综合排名','软科分类','学费/年(元)','就业评级','保研率%','城市等级','转专业政策','双一流学科','主要就业城市','备注','专业组避坑说明','就业受限','组内有坑'];
+// 历年分数→排位对照表（物理类，广东，基于官方数据近似值）
+const SCORE_RANK_REF = [
+  {score:750,rank24:1,rank23:1},{score:700,rank24:280,rank23:310},
+  {score:690,rank24:480,rank23:530},{score:680,rank24:900,rank23:980},
+  {score:670,rank24:1800,rank23:2100},{score:660,rank24:3200,rank23:3600},
+  {score:650,rank24:5800,rank23:6500},{score:640,rank24:9500,rank23:10500},
+  {score:630,rank24:14000,rank23:15500},{score:620,rank24:20000,rank23:22000},
+  {score:610,rank24:28000,rank23:30000},{score:600,rank24:38000,rank23:41000},
+  {score:590,rank24:51000,rank23:54000},{score:580,rank24:66000,rank23:70000},
+  {score:570,rank24:84000,rank23:89000},{score:560,rank24:103000,rank23:108000},
+  {score:550,rank24:123000,rank23:129000},{score:540,rank24:143000,rank23:150000},
+  {score:530,rank24:162000,rank23:169000},{score:520,rank24:180000,rank23:187000},
+  {score:510,rank24:197000,rank23:204000},{score:500,rank24:213000,rank23:220000},
+  {score:490,rank24:228000,rank23:235000},{score:480,rank24:242000,rank23:249000},
+  {score:470,rank24:256000,rank23:263000},{score:460,rank24:268000,rank23:275000},
+];
+function getRankRefByScore(score) {
+  if (!score || score < 400 || score > 750) return null;
+  // 找最近的两个区间插值
+  const s = parseInt(score);
+  for (let i = 0; i < SCORE_RANK_REF.length - 1; i++) {
+    const hi = SCORE_RANK_REF[i], lo = SCORE_RANK_REF[i+1];
+    if (s <= hi.score && s >= lo.score) {
+      const t = (hi.score - s) / (hi.score - lo.score);
+      return {
+        rank24: Math.round(hi.rank24 + t * (lo.rank24 - hi.rank24)),
+        rank23: Math.round(hi.rank23 + t * (lo.rank23 - hi.rank23)),
+      };
+    }
+  }
+  return null;
+}
+function updateRankHint() {
+  const score = parseInt(document.getElementById('w-score')?.value);
+  const rank  = parseInt(document.getElementById('w-rank')?.value);
+  const card  = document.getElementById('rank-ref-card');
+  const rows  = document.getElementById('rank-ref-rows');
+  if (!card || !rows) return;
+
+  const ref = getRankRefByScore(score);
+  if (!ref) { card.style.display = 'none'; return; }
+
+  const fmt = n => n.toLocaleString();
+  // 与输入排位的偏差
+  const diff24 = rank ? rank - ref.rank24 : null;
+  const diff23 = rank ? rank - ref.rank23 : null;
+  const diffBadge = (d) => {
+    if (d == null) return '';
+    const sign = d >= 0 ? '+' : '';
+    const color = d >= 0 ? '#6ee7b7' : '#f87171';
+    return `<span style="font-size:10px;color:${color};font-weight:600">${sign}${d.toLocaleString()}</span>`;
+  };
+  rows.innerHTML = `
+    <div style="background:var(--navy2);border-radius:6px;padding:8px 10px">
+      <div style="color:var(--text3);font-size:10px;margin-bottom:4px">2024年 ${score}分 ≈</div>
+      <div style="font-size:14px;font-weight:600;color:var(--accent2)">${fmt(ref.rank24)} 名</div>
+      ${rank ? `<div style="margin-top:2px">${diffBadge(diff24)} ${diff24!=null?(diff24>=0?'比历年排位好':'比历年排位差'):''}</div>` : ''}
+    </div>
+    <div style="background:var(--navy2);border-radius:6px;padding:8px 10px">
+      <div style="color:var(--text3);font-size:10px;margin-bottom:4px">2023年 ${score}分 ≈</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text2)">${fmt(ref.rank23)} 名</div>
+      ${rank ? `<div style="margin-top:2px">${diffBadge(diff23)} ${diff23!=null?(diff23>=0?'比历年排位好':'比历年排位差'):''}</div>` : ''}
+    </div>`;
+  card.style.display = '';
+}
+
 function getRows() {
   const tl={c:'冲',w:'稳',b:'保',cx_type:'超难',ce_type:'超易'}, el=['','极差','一般','尚可','较好','优秀'];
   const catLabel={'medical':'医药类','finance':'财经类','lang':'语言类','normal':'师范类','agri':'农业类','law':'政法类','tcm':'中医药类'};
-  return S.filtered.map(v => {
+  // 限制80条（按当前排序和筛选取前80）
+  return S.filtered.slice(0, 80).map(v => {
     const catStr = v.ruanke_cat ? (catLabel[v.ruanke_cat]||v.ruanke_cat) + (v.ruanke_cat_rank?` 第${v.ruanke_cat_rank}名`:'上榜') : '';
     return [v.no, tl[v.type], v.school, v.city, v.province_type==='in'?'省内':'省外',
       v.major, v.rank_2023??'首年', v.rank_2024??'首年', v.rank_2025??'首年',
@@ -1936,17 +2080,197 @@ function dlPDF() {
 
   const bgMap={c:'#dbeafe',w:'#dcfce7',b:'#fef9c3',cx_type:'#fecaca',ce_type:'#e9d5ff'};
 function dlExcel() {
-  const bgMap={c:'#dbeafe',w:'#dcfce7',b:'#fef9c3',cx_type:'#fecaca',ce_type:'#e9d5ff'};
-  const rowsH = getRows().map((r, i) => {
-    const bg = S.filtered[i].is_poor_prospect ? '#fef3c7' : bgMap[S.filtered[i].type] || '#fff';
-    return '<tr style="background:'+bg+'">'+r.map(c=>'<td>'+String(c??'')+'</td>').join('')+'</tr>';
+  const score   = S.wizard.score || '—';
+  const rank    = S.wizard.rank  ? parseInt(S.wizard.rank).toLocaleString() : '—';
+  const date    = new Date().toLocaleDateString('zh-CN').replace(/\//g,'-');
+  const userRank = parseInt(S.wizard.rank) || 0;
+
+  // 类型映射
+  const tl = {c:'冲',w:'稳',b:'保',cx_type:'超难',ce_type:'超易'};
+  // 冲稳保行背景色
+  const rowBg = {c:'#FFF3E0',w:'#E8F5E9',b:'#EDE7F6',cx_type:'#FFEBEE',ce_type:'#E3F2FD'};
+
+  // 费用预警
+  function feeWarn(feeVal) {
+    if (!feeVal) return '';
+    const nums = String(feeVal).match(/\d+/g);
+    if (!nums) return '';
+    const max = Math.max(...nums.map(Number));
+    if (max >= 40000) return `⚠ 高 ${(max/10000).toFixed(0)}万/年`;
+    if (max >= 15000) return `注 ${(max/1000).toFixed(0)}k/年`;
+    return '';
+  }
+
+  // 竞争趋势
+  function trend(r25, r24) {
+    if (!r25 || !r24) return '—';
+    const d = parseInt(r25) - parseInt(r24);
+    if (Math.abs(d) < 1000) return '→ 稳定';
+    return d < 0 ? `▲ 加剧 ${(Math.abs(d)/1000).toFixed(1)}k` : `▼ 降低 ${(d/1000).toFixed(1)}k`;
+  }
+
+  // 位次盈余
+  function surplus(r25) {
+    if (!r25 || !userRank) return '';
+    const diff = userRank - parseInt(r25);
+    return diff >= 0 ? `↑ 高 ${diff.toLocaleString()} 名` : `↓ 低 ${Math.abs(diff).toLocaleString()} 名`;
+  }
+  function surplusColor(r25) {
+    if (!r25 || !userRank) return '';
+    return (userRank - parseInt(r25)) >= 0 ? 'color:#1565C0;font-weight:600' : 'color:#C62828;font-weight:600';
+  }
+
+  // 特别提示
+  function tips(v) {
+    const t = [];
+    const s = (v.major||'') + (v.school||'');
+    if (s.includes('中外合作'))  t.push('💰中外合作，请确认学费');
+    if (s.includes('地方专项'))  t.push('📍地方专项，需核查户籍');
+    if (s.includes('协同培养'))  t.push('🏫协同培养，确认实际校区');
+    if ((v.fee||0) >= 40000)     t.push('⚠高收费专业');
+    if (v.has_group_warn)        t.push('⚠专业组有坑');
+    if (v.is_poor_prospect)      t.push('⚠就业受限');
+    return t.join(' ');
+  }
+
+  // ── 构建表格HTML ──
+  const cols = [
+    {w:40,  t:'序号'},
+    {w:50,  t:'类型'},
+    {w:55,  t:'院校代码'},
+    {w:130, t:'院校名称'},
+    {w:70,  t:'省份/城市'},
+    {w:55,  t:'性质'},
+    {w:80,  t:'头衔'},
+    {w:55,  t:'专业组代码'},
+    {w:60,  t:'计划人数'},
+    {w:60,  t:'服从调剂'},
+    {w:55,  t:'专业代码'},
+    {w:160, t:'专业/方向'},
+    {w:80,  t:'校区'},
+    {w:45,  t:'学制'},
+    {w:90,  t:'学费/年'},
+    {w:90,  t:'住宿费/年'},
+    {w:55,  t:'录取人数\n2025'},
+    {w:60,  t:'最低分\n2025'},
+    {w:75,  t:'最低排位\n2025'},
+    {w:55,  t:'录取人数\n2024'},
+    {w:60,  t:'最低分\n2024'},
+    {w:75,  t:'最低排位\n2024'},
+    // ── 粤志通增强列 ──
+    {w:100, t:'位次盈余\n(与考生差)', gold:true},
+    {w:100, t:'竞争趋势\n2024→2025',  gold:true},
+    {w:80,  t:'费用预警',              gold:true},
+    {w:200, t:'粤志通特别提示',        gold:true},
+  ];
+
+  const HDR_STYLE = 'background:#1E3A5F;color:#F0C060;font-weight:bold;font-size:11px;padding:6px 5px;text-align:center;border:1px solid #2d4a70;white-space:pre-line;vertical-align:middle';
+  const HDR_GOLD  = 'background:#7B5E2A;color:#FFE082;font-weight:bold;font-size:11px;padding:6px 5px;text-align:center;border:1px solid #5D4519;white-space:pre-line;vertical-align:middle';
+  const TD_BASE   = 'font-size:11px;padding:5px 6px;border:1px solid #E5E7EB;vertical-align:middle;mso-number-format:"@"';
+
+  const headerRow = '<tr>' + cols.map(c =>
+    `<th style="${c.gold ? HDR_GOLD : HDR_STYLE};width:${c.w}px">${c.t}</th>`
+  ).join('') + '</tr>';
+
+  const dataRows = S.filtered.map((v, i) => {
+    const bg    = v.is_poor_prospect ? '#FFF9C4' : (rowBg[v.type] || '#FFFFFF');
+    const r25   = v.rank_2025 || v._rankRef;
+    const r24   = v.rank_2024;
+    const r23   = v.rank_2023;
+    const sur   = surplus(r25);
+    const surC  = surplusColor(r25);
+    const trnd  = trend(r25, r24);
+    const trndC = trnd.startsWith('▲') ? 'color:#C62828' : trnd.startsWith('▼') ? 'color:#1B5E20' : 'color:#555';
+    const fw    = feeWarn(v.fee);
+    const fwC   = fw.startsWith('⚠') ? 'color:#E65100;font-weight:bold;background:#FFF9C4' : 'color:#555';
+    const tip   = tips(v);
+
+    const cells = [
+      i+1,
+      tl[v.type] || v.type || '—',
+      v.school_code || '—',
+      v.school || '—',
+      `${v.city||''}`,
+      v.province_type === 'in' ? '省内' : '省外',
+      v.ruanke_rank ? `软科${v.ruanke_rank}` : (v.yixiu_subject && !v.yixiu_subject.includes('无') ? '双一流' : ''),
+      v.group_code || '—',
+      '—',   // 计划人数（数据库暂无）
+      '是',  // 服从调剂默认
+      '—',   // 专业代码
+      v.major || '—',
+      '—',   // 校区
+      '—',   // 学制
+      v.fee ? `${v.fee.toLocaleString()}元` : '—',
+      '—',   // 住宿费
+      '—',   // 2025录取人数
+      '—',   // 2025最低分
+      r25 ? parseInt(r25).toLocaleString() : '—',
+      '—',   // 2024录取人数
+      '—',   // 2024最低分
+      r24 ? parseInt(r24).toLocaleString() : '—',
+    ];
+
+    const baseTds = cells.map(c => `<td style="${TD_BASE};background:${bg}">${c}</td>`).join('');
+    const augTds  = [
+      `<td style="${TD_BASE};${surC};background:${sur.startsWith('↑')?'#DCEEFB':sur?'#FFDEDE':'#fff'}">${sur}</td>`,
+      `<td style="${TD_BASE};${trndC}">${trnd}</td>`,
+      `<td style="${TD_BASE};${fwC}">${fw}</td>`,
+      `<td style="${TD_BASE};background:${tip?'#FFFDE7':'#fff'};font-size:10px">${tip}</td>`,
+    ].join('');
+
+    return `<tr>${baseTds}${augTds}</tr>`;
   }).join('');
-  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><style>td{mso-number-format:'\\@'}</style></head><body><table border="1"><tr style="background:#0d1b2a;color:#c8a96e;font-weight:bold">${HDR.map(h=>'<th>'+h+'</th>').join('')}</tr>${rowsH}</table></body></html>`;
+
+  // ── 图例行 ──
+  const legend = `<tr>
+    <td colspan="4" style="${TD_BASE};font-weight:bold">图例说明：</td>
+    <td style="${TD_BASE};background:#FFF3E0">🔵 冲  概率&lt;40%</td>
+    <td style="${TD_BASE};background:#E8F5E9">🟢 稳  概率40–70%</td>
+    <td style="${TD_BASE};background:#EDE7F6">🟣 保  概率&gt;70%</td>
+    <td style="${TD_BASE};background:#FFEBEE">🔴 超难</td>
+    <td style="${TD_BASE};background:#FFF9C4">⚠ 高费/就业受限</td>
+    <td colspan="${cols.length-9}" style="${TD_BASE};color:#888;font-size:10px">粤志通增强列（金色表头）：位次盈余 / 竞争趋势 / 费用预警 / 特别提示</td>
+  </tr>`;
+
+  // ── 副标题行 ──
+  const sub1 = `<tr>
+    <td colspan="${cols.length}" style="background:#0D1B2A;color:#C8A96E;font-weight:bold;font-size:13px;padding:8px 10px;border:1px solid #1E3A5F">
+      粤志通 · 高考志愿方案 &nbsp;|&nbsp; ${score}分 &nbsp;|&nbsp; 省内排位 ${rank} &nbsp;|&nbsp; 生成日期：${date}
+    </td>
+  </tr>`;
+  const sub2 = `<tr>
+    <td colspan="${cols.length-4}" style="${TD_BASE};background:#EEF2FF;font-size:10px;color:#555">
+      ⚠ 本方案基于历年公开投档数据，仅供参考。实际填报请以广东省教育考试院官方系统及当年招生简章为准。院校代码/专业组代码请在官方系统核实。
+    </td>
+    <td colspan="4" style="${TD_BASE};background:#7B5E2A;color:#FFE082;font-size:10px;font-weight:bold;text-align:center">
+      ← 粤志通增强列（右侧4列）
+    </td>
+  </tr>`;
+
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+<head><meta charset="UTF-8">
+<style>
+  table{border-collapse:collapse;font-family:'PingFang SC','Microsoft YaHei',Arial,sans-serif}
+  td,th{mso-number-format:"@"}
+</style>
+</head>
+<body>
+<table border="1">
+  ${sub1}${sub2}
+  <thead>${headerRow}</thead>
+  <tbody>${dataRows}</tbody>
+  <tfoot>${legend}</tfoot>
+</table>
+</body></html>`;
+
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([html], {type:'application/vnd.ms-excel;charset=utf-8'}));
-  a.download = `志愿通_${S.wizard.score}分_${new Date().toLocaleDateString('zh-CN').replace(/\//g,'-')}.xls`;
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+html], {type:'application/vnd.ms-excel;charset=utf-8'}));
+  a.download = `志愿通_${score}分_${date}.xls`;
   a.click();
-  sb.from('analytics_events').insert({ event_type:'plan_downloaded', plan_id: S.currentPlanId, user_id: S.user?.id, meta:{format:'excel'} });
+  sb.from('analytics_events').insert({
+    event_type:'plan_downloaded', plan_id: S.currentPlanId,
+    user_id: S.user?.id, meta:{format:'excel_enhanced'}
+  }).catch(()=>{});
 }
 </script>
 </body>
